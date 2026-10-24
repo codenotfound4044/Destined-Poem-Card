@@ -266,7 +266,7 @@ export const SyncView = {
           <div class="field" style="max-width:640px">
             <span class="field-label">界面和脚本从哪里加载</span>
             <label class="choice"><input type="radio" value="local" v-model="assetSource" :disabled="busy" /><span><b>这台电脑（开发测试）</b><br /><span class="muted small">用工作区刚构建的界面，改完马上能看到。只有在这台电脑上、工作台开着时才能正常显示，手机或别的设备上会加载不出来。</span></span></label>
-            <label class="choice"><input type="radio" value="cdn" v-model="assetSource" :disabled="busy || !cdnReady" /><span><b>已发布的程序资源（CDN）<template v-if="assets?.version"> · 版本 {{ assets.version }}</template></b><br /><span class="muted small" v-if="cdnReady">从 CDN 加载已发布的界面，手机和别的设备也能用。推送前会先确认 CDN 上真的有这个版本的文件。玩家可以在角色变量「资源版本」里换版本。</span><span class="muted small" v-else-if="assets?.error">资源版本配置有问题：{{ assets.error }}</span><span class="muted small" v-else>资源版本 {{ assets?.version }} 还没有发布。发布标签 {{ assets?.tag }} 并运行 <code>pnpm card assets verify</code> 核对后才能选。</span></span></label>
+            <label class="choice"><input type="radio" value="cdn" v-model="assetSource" :disabled="busy || !cdnReady" /><span><b>已发布的程序资源（CDN）<template v-if="assets?.version"> · 版本 {{ assets.version }}</template></b><br /><span class="muted small" v-if="cdnReady">从 CDN 加载已发布的界面，手机和别的设备也能用。推送前会先确认 CDN 上真的有这个版本的文件。玩家可以在状态栏「设置」页的「脚本版本」里换版本。</span><span class="muted small" v-else-if="assets?.error">资源版本配置有问题：{{ assets.error }}</span><span class="muted small" v-else>资源版本 {{ assets?.version }} 还没有发布。发布标签 {{ assets?.tag }} 并运行 <code>pnpm card assets verify</code> 核对后才能选。</span></span></label>
           </div>
           <p class="muted">建议先点「先检查」：会构建并核对目标，但不写入酒馆。</p>
           <div class="row">
