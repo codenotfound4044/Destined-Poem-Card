@@ -16,4 +16,4 @@
 
 版本号、更新记录和发版命令见 [版本、封面与发布](versioning.md)。发布配置与发布动作分开处理。`release` 构建只生成固定 CDN 目标引用；创建仓库、提交、tag、推送和上传产物需要开发组明确同意。
 
-当前 CDN 路径使用 GitHub 仓库文件，程序资源的标签是 `assets-v<资源版本>`（见 [程序资源版本](versioning.md#程序资源版本)）：目标 tag 对应的提交必须实际包含 `dist/release/**`，只有 GitHub Release 附件不能提供这些 URL。`dist/` 默认忽略；正式发布时显式加入该目录，并保留来源提交记录，勿连同 `imports/` 或运行缓存发布。推送后逐项检查报告中的自有 URL、ESM MIME/CORS 和酒馆加载，再记录实际发布结果；不移动旧 tag。
+程序资源放在 Cloudflare R2 桶 `destiny-assets`，经 `https://cdn.poem-of-destiny.com/assets/<资源版本>/` 提供，标签是 `assets-v<资源版本>`（见 [程序资源版本](versioning.md#程序资源版本)）。推送标签后由「Publish program assets」工作流（`.github/workflows/publish-assets.yml`）构建 release 并上传，`dist/` 不再提交进 Git。同一版本只上传一次，目录里已有 `manifest.json` 时工作流会停下。工作流会核对入口、JavaScript 的 Content-Type 和 CORS；酒馆内加载仍要另行实测，再记录实际发布结果；不移动旧 tag。

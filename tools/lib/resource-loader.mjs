@@ -25,6 +25,8 @@ export const DEFAULT_CDN_ORIGINS = [
 export const ASSET_MODES = ["local", "cdn"];
 
 // release.json 的 assets：程序资源自己的版本，和卡版本分开。
+// cdnOrigins 是 jsDelivr 域名，第三方脚本总是走它们；
+// roots 是自有资源的地址模板（含 {version}），没填时退回 jsDelivr 读本仓库标签。
 export function assetsRelease(release) {
   const assets = release.assets ?? {};
   const version = String(assets.version ?? "").replace(/^v/i, "");
@@ -35,16 +37,34 @@ export function assetsRelease(release) {
   for (const origin of origins)
     if (!/^https:\/\/[^/\s]+$/.test(origin))
       throw new Error(`CDN 域名格式应为 https://域名: ${origin}`);
+  let roots;
+  if (assets.roots !== undefined) {
+    if (!Array.isArray(assets.roots) || !assets.roots.length)
+      throw new Error("release.json 的 assets.roots 不能为空");
+    for (const root of assets.roots)
+      if (
+        typeof root !== "string" ||
+        !/^https:\/\/[^/\s]+\/\S*\{version\}\S*$/.test(root) ||
+        root.endsWith("/") ||
+        root.split("{version}").length !== 2
+      )
+        throw new Error(
+          `资源地址模板格式应为 https://域名/路径，含一处 {version}，结尾不带 /: ${root}`,
+        );
+    roots = assets.roots.slice();
+  }
   return {
     version,
     tagPrefix: assets.tagPrefix ?? "assets-v",
     published: assets.published === true,
     origins,
+    roots,
     tag: `${assets.tagPrefix ?? "assets-v"}${version}`,
   };
 }
 
-// 自有资源的加载器配置。local 只有本机一个地址；cdn 是各 CDN 域名下带 {version} 的资源根。
+// 自有资源的加载器配置。local 只有本机一个地址；cdn 是带 {version} 的资源根，
+// 优先用 assets.roots（自有域名），没填才按 cdnOrigins 拼 jsDelivr 地址。
 export function resourceConfig(release, profile = "local", assets) {
   const mode = assets ?? (profile === "release" ? "cdn" : "local");
   if (!ASSET_MODES.includes(mode)) throw new Error(`未知资源来源: ${mode}`);
@@ -59,10 +79,12 @@ export function resourceConfig(release, profile = "local", assets) {
     };
   }
   const info = assetsRelease(release);
-  const roots = info.origins.map(
-    (origin) =>
-      `${origin}/gh/${release.repository}@${info.tagPrefix}{version}/dist/release`,
-  );
+  const roots =
+    info.roots ??
+    info.origins.map(
+      (origin) =>
+        `${origin}/gh/${release.repository}@${info.tagPrefix}{version}/dist/release`,
+    );
   return {
     key: OWN_RESOURCE_KEY,
     mode,

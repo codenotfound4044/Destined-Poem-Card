@@ -8,7 +8,10 @@
   "assets": {
     "version": "1.0.0",
     "tagPrefix": "assets-v",
-    "published": true,
+    "published": false,
+    "roots": [
+      "https://cdn.poem-of-destiny.com/assets/{version}"
+    ],
     "cdnOrigins": [
       "https://testingcf.jsdelivr.net",
       "https://cdn.jsdelivr.net",

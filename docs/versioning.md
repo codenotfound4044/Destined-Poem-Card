@@ -57,7 +57,7 @@ pnpm card release 4.3.4      # 填开发组定好的版本号；patch / minor / 
 
 中途失败会还原版本号、更新记录和快照。
 
-发版只在本机进行，不提交、不打标签、不推送。release 卡的程序资源从 `Destined-Poem-Card@assets-v<资源版本>` 加载（见下文「程序资源版本」）；正式发卡时如果程序也有改动，同一个提交一起打卡标签和资源标签。打标签和发布 `dist/release/**` 的要求见 [工作流](workflow.md)。
+发版只在本机进行，不提交、不打标签、不推送。release 卡的程序资源从 `https://cdn.poem-of-destiny.com/assets/<资源版本>` 加载（见下文「程序资源版本」）；正式发卡时如果程序也有改动，同一个提交一起打卡标签和资源标签。打标签和上传资源的要求见 [工作流](workflow.md)。
 
 V4.3.3 于 2026-09-12 14:55 在社区发布。它的变量结构快照取自前端仓库标签 `v1.9.26`（同日 13:06，是发布前最后一个标签）。之后工作区里的改动都属于下一版。
 
@@ -70,17 +70,18 @@ V4.3.3 于 2026-09-12 14:55 在社区发布。它的变量结构快照取自前�
   "version": "1.0.0",
   "tagPrefix": "assets-v",
   "published": false,
+  "roots": ["https://cdn.poem-of-destiny.com/assets/{version}"],
   "cdnOrigins": ["https://testingcf.jsdelivr.net", "https://cdn.jsdelivr.net", "https://fastly.jsdelivr.net", "https://gcore.jsdelivr.net"]
 }
 ```
 
-CDN 地址是 `<cdnOrigin>/gh/<仓库>@assets-v<资源版本>/dist/release/...`。release 构建和"推 CDN 资源"都用它；卡版本只决定卡名、世界书名和卡的标签 `v<卡版本>`。只修程序时发资源补丁，卡版本不动。
+自有资源的地址是 `roots` 里的模板，`{version}` 换成资源版本，文件放在 Cloudflare R2 桶 `destiny-assets` 的 `assets/<资源版本>/` 下。`cdnOrigins` 只给第三方脚本用（它们仍在 jsDelivr 上）；没填 `roots` 时，自有资源退回 `<cdnOrigin>/gh/<仓库>@assets-v<资源版本>/dist/release/...`，那要求仓库公开，现在不用。release 构建和"推 CDN 资源"都用这个地址；卡版本只决定卡名、世界书名和卡的标签 `v<卡版本>`。只修程序时发资源补丁，卡版本不动。
 
 ### 卡里的加载器
 
 三条界面正则、三个自有脚本（Schema 注册、自动化、地理数据）和三个第三方脚本（创意工坊、自动正则、角色管理库）不再写死单个 URL，而是内嵌同一段加载代码（源码在 [tools/lib/resource-loader.mjs](../tools/lib/resource-loader.mjs)）：
 
-- 按 `cdnOrigins` 的顺序探测入口文件（每个最多等 6 秒），用第一个能连上的；成功的那个记在浏览器 `localStorage`，下次先试它。
+- 按资源根的顺序探测入口文件（每个最多等 6 秒），用第一个能连上的。自有资源目前只有一个根；第三方脚本按 `cdnOrigins` 的顺序回退。成功的那个记在浏览器 `localStorage`，下次先试它。
 - 角色变量「资源版本」是一个对象，每组脚本一项：`{ 命定之诗: "1.0.0", 创意工坊: "2.3.1", 自动正则: "2.3.1", 角色管理库: "0.3.7" }`。「命定之诗」管自有的界面、自动化和地理脚本，默认值是 `assets.version`；三个第三方脚本的默认值取 `release.json` 的 `dependencies` 链接里的版本，版本前的 `v` 由加载器补，玩家填不填都行。每组各读自己那一项，没填就用卡内默认版本。填的版本在所有 CDN 上都加载不到时，退回默认版本并提示一次；格式不对（不是 `主.次.补丁`）同样提示并用默认版本。
 - 前端页面从加载器设置的 `__destinyAssetBase` 取数据和图片地址，所以数据文件也跟着走同一个 CDN。
 - 本机构建（local）的自有资源只有 `http://127.0.0.1:5173/dist/local` 一个地址，不读「命定之诗」那一项；第三方脚本照常走 CDN 和版本设置。
@@ -95,12 +96,12 @@ CDN 地址是 `<cdnOrigin>/gh/<仓库>@assets-v<资源版本>/dist/release/...`�
 ```sh
 pnpm card assets                 # 当前资源版本、标签、是否已标记发布、各 CDN 地址
 pnpm card assets set 1.0.1       # 改资源版本，published 置回 false
-pnpm card build --profile release
-# 提交 dist/release/**，打标签 assets-v1.0.1 并推送（需开发组同意）
-pnpm card assets verify          # 到 CDN 逐个入口核对，全部能访问才把 published 标成 true
+# 提交 release.json，打标签 assets-v1.0.1 并推送（需开发组同意）
+# 「Publish program assets」工作流自动构建 release 并上传到 R2，跑完后：
+pnpm card assets verify          # 到 CDN 逐个入口核对，全部能访问才把 published 标成 true，再提交
 ```
 
-标签提交必须包含 `dist/release/**`，规则同下文的卡发布。`verify` 只确认文件存在，不比对内容；发布前确认构建对应要发的源码。旧资源标签不移动，玩家改回旧版本号仍能用旧资源。
+工作流在标签对应的提交上构建，标签名必须和 `release.json` 的资源版本一致；也可以在 Actions 页面手动运行，构建所选分支上的代码。同一版本目录里已有 `manifest.json`（上传完成的标记，记着来源提交）时拒绝覆盖，要发新内容就升资源版本。`verify` 只确认文件存在，不比对内容。旧资源目录不删不改，玩家改回旧版本号仍能用旧资源。上传需要仓库 Secrets `R2_ACCOUNT_ID`、`R2_ACCESS_KEY_ID`、`R2_SECRET_ACCESS_KEY`。
 
 发布说明里写清：兼容哪些卡版本、玩家把「资源版本」改成什么、是否涉及变量结构变化。世界书正文、开场白、正则匹配规则和内嵌模板不随资源版本更新；变量结构或前端、自动化调用契约有变化时，要按卡版本规则处理，不能只发资源补丁。
 

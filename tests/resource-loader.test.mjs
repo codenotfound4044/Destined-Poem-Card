@@ -201,6 +201,62 @@ test("assets command bumps the version and only marks it published after the CDN
   assert.equal(JSON.parse(await fs.readFile(file, "utf8")).assets.published, true);
 });
 
+test("own assets can live on a custom domain while third-party scripts stay on jsDelivr", async (t) => {
+  const custom = {
+    ...release,
+    assets: {
+      ...release.assets,
+      roots: ["https://cdn.example.org/assets/{version}"],
+    },
+    dependencies: {
+      workshop: {
+        url: "https://testingcf.jsdelivr.net/gh/someone/workshop@2.3.1/dist/Workshop/index.js",
+      },
+    },
+  };
+  const loader = resourceConfig(custom, "release");
+  assert.deepEqual(loader.roots, ["https://cdn.example.org/assets/{version}"]);
+  assert.equal(loader.primaryRoot, "https://cdn.example.org/assets/1.0.2");
+  const { dependencyConfig } = await import("../tools/lib/resource-loader.mjs");
+  assert.deepEqual(dependencyConfig(custom, "workshop").roots, [
+    "https://a.example.net/gh/someone/workshop@{version}",
+    "https://b.example.net/gh/someone/workshop@{version}",
+  ]);
+  for (const roots of [
+    [],
+    ["http://cdn.example.org/assets/{version}"],
+    ["https://cdn.example.org/assets/1.0.2"],
+    ["https://cdn.example.org/assets/{version}/"],
+    ["https://cdn.example.org/{version}/{version}"],
+  ])
+    assert.throws(
+      () =>
+        resourceConfig(
+          { ...release, assets: { ...release.assets, roots } },
+          "release",
+        ),
+      /roots|资源地址模板/,
+      JSON.stringify(roots),
+    );
+
+  const fs = await import("node:fs/promises");
+  const os = await import("node:os");
+  const path = await import("node:path");
+  const { target } = await import("../tools/assets.mjs");
+  const directory = await fs.mkdtemp(path.join(os.tmpdir(), "destiny-target-"));
+  t.after(() => fs.rm(directory, { recursive: true, force: true }));
+  const file = path.join(directory, "release.json");
+  await fs.writeFile(file, JSON.stringify(custom));
+  assert.deepEqual(await target({ file }), {
+    version: "1.0.2",
+    tag: "assets-v1.0.2",
+    root: "https://cdn.example.org/assets/1.0.2",
+    prefix: "assets/1.0.2",
+  });
+  await fs.writeFile(file, JSON.stringify(release));
+  await assert.rejects(target({ file }), /没有 roots/);
+});
+
 test("third-party scripts get their own key, keep the tag's v and share the remembered CDN", async (t) => {
   const { dependencyConfig, resourceVersions } = await import(
     "../tools/lib/resource-loader.mjs"

@@ -2,6 +2,7 @@
 //   pnpm card assets               看当前资源版本、标签和是否已标记发布
 //   pnpm card assets set 1.0.1     改资源版本（会把 published 置回 false）
 //   pnpm card assets verify        到 CDN 逐个入口核对，全部能访问才标记为已发布
+//   pnpm card assets target        发布工作流用：当前版本要上传到的地址和桶内目录
 import fs from "node:fs/promises";
 import { resolveSource } from "./lib/card-source.mjs";
 import { parseVersion } from "./lib/version.mjs";
@@ -41,7 +42,7 @@ export async function verify({ probe = probeCdn, file = RELEASE } = {}) {
   const result = await probe(info.roots, CDN_ENTRIES);
   if (result.missing.length) {
     const error = new Error(
-      `CDN 上找不到资源版本 ${info.version}（标签 ${info.tag}）的这些文件：${result.missing.join("、")}。确认标签已推送且包含 dist/release/** 后再试。`,
+      `CDN 上找不到资源版本 ${info.version}（标签 ${info.tag}）的这些文件：${result.missing.join("、")}。确认标签已推送、「发布程序资源」工作流已跑完后再试。`,
     );
     error.details = result;
     throw error;
@@ -51,13 +52,28 @@ export async function verify({ probe = probeCdn, file = RELEASE } = {}) {
   await write(file, release);
   return { ...info, published: true, reached: result.root };
 }
+// 上传目标：发布工作流据此决定传到桶里的哪个目录。只支持 assets.roots（自有域名）。
+export async function target({ file = RELEASE } = {}) {
+  const release = await read(file);
+  const info = assetsRelease(release);
+  if (!info.roots)
+    throw new Error("release.json 的 assets 没有 roots，资源走 jsDelivr，不需要上传");
+  const root = info.roots[0].replace("{version}", info.version);
+  return {
+    version: info.version,
+    tag: info.tag,
+    root,
+    prefix: decodeURIComponent(new URL(root).pathname).replace(/^\/+/, ""),
+  };
+}
 export async function main([command = "status", ...args] = []) {
   const actions = {
     status: () => status(),
     set: () => setVersion(args[0]),
     verify: () => verify(),
+    target: () => target(),
   };
   if (!actions[command])
-    throw new Error("用法: card assets [status | set <版本号> | verify]");
+    throw new Error("用法: card assets [status | set <版本号> | verify | target]");
   console.log(JSON.stringify(await actions[command](), null, 2));
 }

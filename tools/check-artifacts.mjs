@@ -29,6 +29,10 @@ export async function checkArtifacts() {
   const greetings = await readJSON("card/greetings/index.json");
   const profiles = [];
   let localBook;
+  // 自有资源 CDN 地址里 {version} 之前的部分；本机构建不应出现。
+  const cdnPrefixes = assetOrigins(release, "release").loader.roots.map(
+    (root) => root.split("{version}")[0],
+  );
   for (const profile of ["local", "release"]) {
     const report = await readJSON(`dist/${profile}/report.json`);
     const card = await readJSON(`dist/${profile}/命定之诗与黄昏之歌.json`);
@@ -121,10 +125,11 @@ export async function checkArtifacts() {
             `${artifact.path}: CDN build contains local resource origin`,
           );
         else
-          assert.ok(
-            !code.includes(`${release.repository}@`),
-            `${artifact.path}: local build contains CDN resource origin`,
-          );
+          for (const prefix of cdnPrefixes)
+            assert.ok(
+              !code.includes(prefix),
+              `${artifact.path}: local build contains CDN resource origin`,
+            );
       }
     }
     let ownUrls = 0;

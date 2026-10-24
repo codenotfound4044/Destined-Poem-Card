@@ -1,0 +1,104 @@
+name: Publish program assets
+
+# 把 release 构建的程序资源（前端、自动化、地理）上传到 R2，经 cdn.poem-of-destiny.com 提供给卡内加载器。
+# 推送 assets-v<版本> 标签时自动运行；也可以手动运行，构建所选分支或标签上的代码。
+# 同一版本只上传一次：目标目录已有 manifest.json 就停下，旧版本不覆盖。
+# 需要仓库 Secrets：R2_ACCOUNT_ID、R2_ACCESS_KEY_ID、R2_SECRET_ACCESS_KEY。
+
+on:
+  push:
+    tags:
+      - "assets-v*"
+  workflow_dispatch:
+
+concurrency:
+  group: publish-assets
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    env:
+      R2_BUCKET: destiny-assets
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - run: npm install --global pnpm@11.17.0
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+      - run: python -m pip install -r requirements.txt
+      - run: pnpm setup:workspace
+      - run: pnpm refs restore
+
+      - name: Resolve upload target
+        id: target
+        run: |
+          node tools/card.mjs assets target > "$RUNNER_TEMP/target.json"
+          cat "$RUNNER_TEMP/target.json"
+          read_target() { node -p "require(process.argv[1])[process.argv[2]]" "$RUNNER_TEMP/target.json" "$1"; }
+          tag="$(read_target tag)"
+          if [ "$GITHUB_REF_TYPE" = "tag" ] && [ "$GITHUB_REF_NAME" != "$tag" ]; then
+            echo "::error::标签 $GITHUB_REF_NAME 与 release.json 的资源版本标签 $tag 不一致"
+            exit 1
+          fi
+          {
+            echo "version=$(read_target version)"
+            echo "tag=$tag"
+            echo "root=$(read_target root)"
+            echo "prefix=$(read_target prefix)"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Refuse to overwrite a published version
+        env:
+          ROOT: ${{ steps.target.outputs.root }}
+        run: |
+          code="$(curl -s -o /dev/null -w '%{http_code}' "$ROOT/manifest.json?check=$GITHUB_RUN_ID")"
+          if [ "$code" = "200" ]; then
+            echo "::error::$ROOT 已经发布过，不覆盖旧版本。要发新内容请先 pnpm card assets set 新版本号"
+            exit 1
+          fi
+
+      - run: pnpm card build --profile release
+
+      - name: Upload to R2
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+          AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
+          ENDPOINT: https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
+          PREFIX: ${{ steps.target.outputs.prefix }}
+          VERSION: ${{ steps.target.outputs.version }}
+          TAG: ${{ steps.target.outputs.tag }}
+        run: |
+          for dir in frontend automation geography; do
+            aws s3 sync "dist/release/$dir" "s3://$R2_BUCKET/$PREFIX/$dir" \
+              --endpoint-url "$ENDPOINT" --no-progress \
+              --cache-control "public, max-age=31536000, immutable"
+          done
+          # manifest.json 最后上传，作为这个版本已完整发布的标记。
+          jq -n --arg version "$VERSION" --arg tag "$TAG" --arg commit "$GITHUB_SHA" \
+            --arg ref "$GITHUB_REF" --arg run "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
+            --arg at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            '{version: $version, tag: $tag, commit: $commit, ref: $ref, run: $run, publishedAt: $at}' \
+            > "$RUNNER_TEMP/manifest.json"
+          aws s3 cp "$RUNNER_TEMP/manifest.json" "s3://$R2_BUCKET/$PREFIX/manifest.json" \
+            --endpoint-url "$ENDPOINT" --no-progress \
+            --content-type application/json --cache-control "no-cache"
+
+      - name: Check the public URLs
+        env:
+          ROOT: ${{ steps.target.outputs.root }}
+        run: |
+          pnpm card assets verify
+          headers="$(curl -sI -H 'Origin: https://example.com' "$ROOT/automation/index.js")"
+          echo "$headers"
+          echo "$headers" | grep -qi '^content-type: .*javascript' || { echo "::error::automation/index.js 的 Content-Type 不是 JavaScript"; exit 1; }
+          echo "$headers" | grep -qi '^access-control-allow-origin: \*' || { echo "::error::缺少 CORS 响应头"; exit 1; }
