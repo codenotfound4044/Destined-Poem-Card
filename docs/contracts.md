@@ -12,7 +12,7 @@
 
 MVU 保留上游 beta 无版本浮动链接；`v0.196.0` 是锁定 API 与已测试基线，不代表运行链接固定到该版本。其余第三方外链依赖通过 [依赖维护](dependencies.md) 跟踪和更新，不把参考资料刷新当成宿主或运行依赖升级。
 
-自有代码支持 `local` 和 `release` 两种资源根。`release` 目标为 `The-poem-of-destiny/Destined-Poem-Card@v<版本>`，`release.json` 中 `published: false` 表示这个版本的正式资源还没推到 GitHub。卡片输出分别为 `dist/local/命定之诗与黄昏之歌.json` 和 `dist/release/命定之诗与黄昏之歌.json`。旧版本卡片、tag 与 CDN 地址保持其原身份。
+自有代码支持本机和 CDN 两种资源来源：`local` 构建默认用本机，也可以 `--assets cdn`；`release` 构建只用 CDN。CDN 目标为 `The-poem-of-destiny/Destined-Poem-Card@assets-v<资源版本>`，资源版本记在 `release.json` 的 `assets`，与卡版本分开；`published: false` 表示卡的正式发布还没完成，`assets.published` 表示该资源版本已在 CDN 核对过。三条界面正则，Schema、自动化、地理三个自有脚本，以及创意工坊、自动正则、角色管理库三个第三方脚本由统一加载器载入，按顺序回退 CDN 域名，并读取角色变量「资源版本」里各自的一项，见 [程序资源版本](versioning.md#程序资源版本)。卡片输出分别为 `dist/local/命定之诗与黄昏之歌.json` 和 `dist/release/命定之诗与黄昏之歌.json`。旧版本卡片、tag 与 CDN 地址保持其原身份。
 
 地理 loader 和地图默认标记来自同一次地理构建，产物集中到 `dist/<profile>/geography/`，版本由 compact 内容 SHA 生成。JSON Schema 从 `packages/game/` 派生，经前端 `.cache/schema.json` 导出至 `dist/<profile>/frontend/data_schema/schema.json`，不维护第二份 Schema 源。
 

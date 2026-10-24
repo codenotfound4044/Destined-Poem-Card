@@ -33,11 +33,21 @@ const release = {
   cardName: "命定之诗与黄昏之歌",
   version: "4.3.3",
   localOrigin: "http://127.0.0.1:5173",
+  assets: {
+    version: "1.0.2",
+    cdnOrigins: ["https://one.example.net", "https://two.example.net"],
+  },
   dependencies: {
     mvu: { url: "https://example.org/mvu.js" },
-    workshop: { url: "https://example.org/workshop.js" },
-    autoRegex: { url: "https://example.org/regex.js" },
-    characterManager: { url: "https://example.org/characters.js" },
+    workshop: {
+      url: "https://testingcf.jsdelivr.net/gh/someone/workshop@2.3.1/dist/Workshop/index.js",
+    },
+    autoRegex: {
+      url: "https://testingcf.jsdelivr.net/gh/someone/workshop@2.3.1/dist/Regex/index.js",
+    },
+    characterManager: {
+      url: "https://testingcf.jsdelivr.net/gh/other/manager@v0.3.7/dist/runtime/index.js",
+    },
   },
 };
 
@@ -62,29 +72,59 @@ test("local and release resources remain distinct after both cards are assembled
     local.data.character_book.entries[0].content,
     "https://old.example.org is narrative text",
   );
-  assert.match(
-    local.data.extensions.regex_scripts[5].replaceString,
-    /127\.0\.0\.1:5173\/dist\/local\/frontend\/status\/index\.html/,
-  );
-  assert.match(
-    published.data.extensions.regex_scripts[5].replaceString,
-    /example\/card@v4\.3\.3\/dist\/release\/frontend\/status\/index\.html/,
+  const localPage = local.data.extensions.regex_scripts[5].replaceString;
+  assert.ok(localPage.includes('"roots":["http://127.0.0.1:5173/dist/local"]'));
+  assert.ok(localPage.includes('"frontend/status/index.html"'));
+  assert.ok(localPage.includes('"version":""'));
+  const releasePage = published.data.extensions.regex_scripts[5].replaceString;
+  for (const origin of ["https://one.example.net", "https://two.example.net"])
+    assert.ok(
+      releasePage.includes(
+        `${origin}/gh/example/card@assets-v{version}/dist/release`,
+      ),
+    );
+  assert.ok(releasePage.includes('"version":"1.0.2"'));
+  assert.ok(!releasePage.includes("127.0.0.1"));
+  // 本机构建也可以改用 CDN 资源，用于推送给手机等其他设备。
+  const cdn = await assembleCard({
+    book,
+    mapMarkers: [],
+    release,
+    assetSource: "cdn",
+  });
+  assert.equal(
+    cdn.data.extensions.regex_scripts[5].replaceString,
+    releasePage,
   );
   assert.match(
     local.data.extensions.tavern_helper.scripts[2].content,
-    /\/dist\/local\/automation\/index\.js/,
+    /await import\(found\.root \+ "\/automation\/index\.js"\)/,
   );
   assert.match(
     local.data.extensions.tavern_helper.scripts[5].content,
-    /\/dist\/local\/geography\/load_compact\.js/,
+    /"geography\/load_compact\.js"/,
+  );
+  assert.equal(
+    local.data.extensions.tavern_helper.scripts[1].content.trim(),
+    "import 'https://example.org/mvu.js';",
   );
   assert.deepEqual(local.data.extensions.tavern_helper.variables, {
     map_markers: [{ id: "source-marker" }],
     map_drawings: [],
     status_edit_enabled: false,
     start_presets: { presets: [] },
+    资源版本: {
+      命定之诗: "1.0.2",
+      创意工坊: "2.3.1",
+      自动正则: "2.3.1",
+      角色管理库: "0.3.7",
+    },
   });
   assert.throws(() => assetOrigins(release, "other"), /未知构建配置/);
+  assert.throws(
+    () => assetOrigins(release, "release", "local"),
+    /只能使用 CDN/,
+  );
 });
 
 test("source ordering, IDs, extension metadata and editable regex replacements survive assembly", async () => {

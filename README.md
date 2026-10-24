@@ -71,7 +71,7 @@ pnpm card sync --dry-run
 pnpm verify
 ```
 
-构建默认使用 `local`，自有资源指向本机；`release` 使用配置中的固定 CDN 目标。目标为 `The-poem-of-destiny/Destined-Poem-Card@v<版本>`。版本号、开发版标记、封面和发版流程见 [docs/versioning.md](docs/versioning.md)；当前已发布 V4.3.3，工作区构建标为 `V4.3.3+dev.…`。
+构建默认使用 `local`，自有资源指向本机；`release` 使用配置中的固定 CDN 目标。目标为 `The-poem-of-destiny/Destined-Poem-Card@assets-v<资源版本>`，资源版本与卡版本分开，卡内加载器会在几个 CDN 域名间自动回退。版本号、开发版标记、封面和发版流程见 [docs/versioning.md](docs/versioning.md)；当前已发布 V4.3.3，工作区构建标为 `V4.3.3+dev.…`。
 
 推送到酒馆可在工作台中操作，也可用 `pnpm card sync`。在酒馆助手安装一次全局桥接脚本后，可选择已连接的酒馆与目标角色，检查或构建后覆盖同步；首次使用见 [同步到测试酒馆](docs/sync.md)。参考源更新与每周检查 PR 见 [知识源](docs/references.md)，第三方依赖更新见 [依赖维护](docs/dependencies.md)。
 

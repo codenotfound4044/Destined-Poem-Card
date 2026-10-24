@@ -11,6 +11,7 @@ import {
   loadWorldbook,
   assembleCard,
   assetOrigins,
+  OWN_SCRIPT_ENTRIES,
 } from "./lib/card-source.mjs";
 import { bundleWorldbook, run, sha256 } from "./lib/card-bundle.mjs";
 import { writeCardPNG } from "./lib/png.mjs";
@@ -23,6 +24,7 @@ import {
   VERSION_PLACEHOLDER,
 } from "./lib/version.mjs";
 import { readCover } from "./lib/cover.mjs";
+import { SWITCHABLE_DEPENDENCIES } from "./lib/resource-loader.mjs";
 import { nestingIssues, nestingItems } from "./lib/worldbook-nesting.mjs";
 
 async function filesAt(directory) {
@@ -239,9 +241,13 @@ export function addVersionEntry(book, version = VERSION_PLACEHOLDER) {
   });
   return { ...book, entries };
 }
-export async function build(profile = "local") {
+export async function build(profile = "local", { assetSource } = {}) {
   const release = await readJSON("release.json");
-  const { assetBase, base } = assetOrigins(release, profile);
+  const { assetBase, base, loader } = assetOrigins(
+    release,
+    profile,
+    assetSource,
+  );
   const stats = await check();
   const out = resolveSource(`dist/${profile}`);
   await fs.mkdir(out, { recursive: true });
@@ -296,6 +302,7 @@ export async function build(profile = "local") {
       mapMarkers: geography.mapMarkers,
       release,
       profile,
+      assetSource: loader.mode,
       version: VERSION_PLACEHOLDER,
     }),
     null,
@@ -310,14 +317,25 @@ export async function build(profile = "local") {
   const cover = await readCover();
   const png = path.join(out, "命定之诗与黄昏之歌.png");
   await fs.writeFile(png, writeCardPNG(cover.bytes, card));
+  // 自有资源由加载器拼地址，按入口列出主资源根下的 URL；其余是第三方固定链接。
+  const ownRoles = new Set(Object.keys(OWN_SCRIPT_ENTRIES));
+  const sourceScripts = await readJSON("card/scripts/index.json");
   const scriptUrls = card.data.extensions.tavern_helper.scripts.flatMap(
-    (script) =>
-      [...script.content.matchAll(/https?:\/\/[^'"\s]+/g)].map((m) => m[0]),
+    (script, index) =>
+      ownRoles.has(sourceScripts[index].role)
+        ? [`${base}/${OWN_SCRIPT_ENTRIES[sourceScripts[index].role]}`]
+        : sourceScripts[index].role in SWITCHABLE_DEPENDENCIES
+          ? [release.dependencies[sourceScripts[index].role].url]
+          : [...script.content.matchAll(/https?:\/\/[^'"\s]+/g)].map(
+            (m) => m[0],
+          ),
   );
-  const pageUrls = card.data.extensions.regex_scripts.flatMap((regex) =>
-    [...regex.replaceString.matchAll(/https?:\/\/[^'"\s<>`]+/g)].map(
-      (m) => m[0],
-    ),
+  const pageUrls = (await readJSON("card/regex/index.json")).flatMap((regex) =>
+    regex.frontendView
+      ? [`${assetBase}/${regex.frontendView}/index.html`]
+      : [
+          ...(regex.replaceString ?? "").matchAll(/https?:\/\/[^'"\s<>`]+/g),
+        ].map((m) => m[0]),
   );
   const dataUrls = Object.keys(await readJSON("content/manifest.json")).map(
     (name) => `${assetBase}/assets/data/${encodeURIComponent(name)}`,
@@ -333,6 +351,7 @@ export async function build(profile = "local") {
   ];
   const report = {
     profile,
+    assetSource: loader.mode,
     published: release.published,
     candidate: profile === "release" && !release.published,
     cardVersion: version,
@@ -350,7 +369,15 @@ export async function build(profile = "local") {
       unregistered: stats.unregistered.length,
       nesting: stats.nesting.length,
     },
-    assets: { base, urls },
+    assets: {
+      base,
+      urls,
+      roots: loader.roots,
+      version: loader.version || null,
+      tag: loader.tag ?? null,
+      published:
+        loader.mode === "cdn" ? release.assets?.published === true : null,
+    },
     validation: {
       static:
         "passed: source checks, package builds, official worldbook bundle",
@@ -392,16 +419,27 @@ if (
     if (command === "map") await map(args.join(" "));
     else if (command === "check") await check();
     else if (command === "build") {
-      if (args.length && (args[0] !== "--profile" || args.length !== 2))
-        throw new Error("用法: build [--profile local|release]");
-      await build(args[1] ?? "local");
+      const options = { profile: "local" };
+      for (let i = 0; i < args.length; i += 2) {
+        const key = { "--profile": "profile", "--assets": "assetSource" }[
+          args[i]
+        ];
+        if (!key || !args[i + 1])
+          throw new Error(
+            "用法: build [--profile local|release] [--assets local|cdn]",
+          );
+        options[key] = args[i + 1];
+      }
+      await build(options.profile, { assetSource: options.assetSource });
     } else if (command === "diff") await diff();
     else if (command === "sync") await (await import("./sync.mjs")).main(args);
+    else if (command === "assets")
+      await (await import("./assets.mjs")).main(args);
     else if (command === "version" || command === "release")
       await (await import("./release.mjs")).main([command, ...args]);
     else
       throw new Error(
-        "用法: card map [query] | check | build [--profile local|release] | diff | sync [status|--dry-run|restore <backupPath>] | version | release <版本号，如 4.3.4>",
+        "用法: card map [query] | check | build [--profile local|release] [--assets local|cdn] | diff | sync [status|--dry-run|restore <backupPath>] | version | release <版本号，如 4.3.4> | assets [status|set <版本号>|verify]",
       );
   } catch (error) {
     console.error(error.stack);

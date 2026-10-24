@@ -5,6 +5,17 @@
   "releasedAt": "2026-09-12T14:55:00+08:00",
   "localOrigin": "http://127.0.0.1:5173",
   "published": false,
+  "assets": {
+    "version": "1.0.0",
+    "tagPrefix": "assets-v",
+    "published": false,
+    "cdnOrigins": [
+      "https://testingcf.jsdelivr.net",
+      "https://cdn.jsdelivr.net",
+      "https://fastly.jsdelivr.net",
+      "https://gcore.jsdelivr.net"
+    ]
+  },
   "dependencies": {
     "mvu": {
       "version": "default-branch",

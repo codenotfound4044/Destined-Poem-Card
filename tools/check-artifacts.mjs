@@ -7,10 +7,14 @@ import {
   readJSON,
   assetOrigins,
   resolveSource,
+  OWN_SCRIPT_ENTRIES,
 } from "./lib/card-source.mjs";
 import { sha256 } from "./lib/card-bundle.mjs";
 import { readCardPNG } from "./lib/png.mjs";
 import { cardIdentity, VERSION_ENTRY_NAME } from "./lib/version.mjs";
+import { RESOURCE_VARIABLE, resourceVersions } from "./lib/resource-loader.mjs";
+
+const OWN_ROLES = new Set(Object.keys(OWN_SCRIPT_ENTRIES));
 
 const withoutVersionEntry = (book) => ({
   ...book,
@@ -28,7 +32,12 @@ export async function checkArtifacts() {
   for (const profile of ["local", "release"]) {
     const report = await readJSON(`dist/${profile}/report.json`);
     const card = await readJSON(`dist/${profile}/命定之诗与黄昏之歌.json`);
-    const { base, assetBase } = assetOrigins(release, profile);
+    const { base, assetBase, loader } = assetOrigins(
+      release,
+      profile,
+      report.assetSource,
+    );
+    if (profile === "release") assert.equal(loader.mode, "cdn");
     assert.equal(report.assets.base, base);
     const identity = cardIdentity(release);
     const version = card.data.character_version;
@@ -56,6 +65,22 @@ export async function checkArtifacts() {
     assert.deepEqual(
       card.data.extensions.regex_scripts.map((item) => item.id),
       regex.map((item) => item.id),
+    );
+    // 自有入口都要走同一套加载器配置，不能残留写死的单个地址。
+    const roots = JSON.stringify(loader.roots);
+    const loaders = [
+      ...card.data.extensions.regex_scripts
+        .filter((item, index) => regex[index].frontendView)
+        .map((item) => item.replaceString),
+      ...card.data.extensions.tavern_helper.scripts
+        .filter((item, index) => OWN_ROLES.has(scripts[index].role))
+        .map((item) => item.content),
+    ];
+    assert.equal(loaders.length, 3 + OWN_ROLES.size);
+    for (const code of loaders) assert.ok(code.includes(roots), "加载器资源根不一致");
+    assert.deepEqual(
+      card.data.extensions.tavern_helper.variables[RESOURCE_VARIABLE],
+      resourceVersions(release),
     );
     if (profile === "local")
       localBook = withoutVersionEntry(card.data.character_book);
@@ -90,15 +115,15 @@ export async function checkArtifacts() {
           ),
           `${artifact.path}: catalog requests must use the workspace asset root`,
         );
-        if (profile === "release")
+        if (loader.mode === "cdn")
           assert.ok(
             !code.includes(release.localOrigin),
-            `${artifact.path}: release contains local resource origin`,
+            `${artifact.path}: CDN build contains local resource origin`,
           );
-        if (profile === "local")
+        else
           assert.ok(
-            !code.includes(`${release.repository}@${cardIdentity(release).tag}/dist/release`),
-            `${artifact.path}: local contains release resource origin`,
+            !code.includes(`${release.repository}@`),
+            `${artifact.path}: local build contains CDN resource origin`,
           );
       }
     }

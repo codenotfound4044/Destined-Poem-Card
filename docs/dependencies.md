@@ -9,6 +9,8 @@
 | `workshop`、`autoRegex` | `Akabanesaki/myrepo` 的 `dist/CreativeWorkshop/index.js`、`dist/AutoDialogueBeautifier/index.js` | 同组 `X.Y.Z` 正式 tag，当前基线 `2.3.1`，两个角色一起更新。                                                       |
 | `characterManager`      | `uikawinwing/CharInfo-Manager` 的 `dist/char_info_viewer_runtime/index.js`                       | `vX.Y.Z` 正式 tag，当前基线 `v0.3.7`。                                                                            |
 
+`workshop`、`autoRegex`、`characterManager` 在卡里由统一加载器载入：这里的链接决定卡内默认版本（写进角色变量「资源版本」的「创意工坊」「自动正则」「角色管理库」），玩家可以在状态栏设置页分别改成别的版本，CDN 连不上时自动换域名，见 [程序资源版本](versioning.md#程序资源版本)。因此这三个链接必须保持 jsDelivr 的 `gh/仓库@版本/路径` 形式，构建会检查。
+
 MVU beta 的运行链接是 `https://testingcf.jsdelivr.net/gh/MagicalAstrogy/MagVarUpdate/artifact/bundle.js`。CDN 可能缓存默认分支文件，因此报告中的默认分支提交只表示检查时的 Git 快照，下载 SHA 表示当次实际收到的脚本，不能把二者当成严格绑定。代码查阅仍使用已验证宿主环境对应的固定 API 参考资料；浮动链接不代表云宿主或其他插件已升级。
 
 ```sh
