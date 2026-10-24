@@ -1,5 +1,3 @@
-const ExternalImageHostAllowList = ['files.catbox.moe', 'i.ibb.co', 'wsrv.nl'];
-
 export interface ExternalImageEntry {
   url: string;
   title: string;
@@ -22,11 +20,6 @@ export const getAllowedExternalImageUrl = (value: unknown) => {
     const url = new URL(normalizedValue);
     if (url.protocol !== 'https:') {
       console.log('[ExternalImage] 忽略非 https 图片 URL:', normalizedValue);
-      return '';
-    }
-
-    if (!ExternalImageHostAllowList.includes(url.hostname.toLowerCase())) {
-      console.log('[ExternalImage] 忽略非白名单图片域名:', normalizedValue);
       return '';
     }
 
