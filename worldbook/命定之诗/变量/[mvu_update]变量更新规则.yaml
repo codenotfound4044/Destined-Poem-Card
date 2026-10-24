@@ -264,12 +264,12 @@ variables_update_rules:
       职业: *occupation
       生命层级:
         check:
-          - 随角色完成层级突破更新
+          - 随角色完成层级晋升更新
       等级:
         type: number
         range: 1~25
         check:
-          - 随角色战斗、历练、获得机缘等情况变化
+          - 随角色战斗、历练、获得奇遇等情况变化
       属性.${五维}:
         <<: *attr
         check:
