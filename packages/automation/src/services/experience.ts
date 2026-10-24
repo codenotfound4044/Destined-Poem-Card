@@ -71,7 +71,7 @@ export const processExperienceAndLevel = (
 
       _.set(character, '生命层级', milestone.tier);
       if (previousTier !== milestone.tier) {
-        tierBreakthroughs.push(`{{user}}的生命层级从${previousTier}突破到了${milestone.tier}`);
+        tierBreakthroughs.push(`{{user}}的生命层级从${previousTier}晋升到了${milestone.tier}`);
         previousTier = milestone.tier;
       }
     }

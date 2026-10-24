@@ -232,7 +232,7 @@ export const processNPCExperienceAndLevel = (
 
       const nextTier = getTierForLevel(npcData.level);
       if (previousTier !== nextTier) {
-        levelUpPrompts.push(`${name}的生命层级从${previousTier}突破到了${nextTier}`);
+        levelUpPrompts.push(`${name}的生命层级从${previousTier}晋升到了${nextTier}`);
         previousTier = nextTier;
       }
 
