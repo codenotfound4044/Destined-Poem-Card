@@ -1,6 +1,6 @@
 // Install as a global Tavern Helper script, outside the character's seven scripts.
 import { createReceiver, canonical, base64ToBytes } from "./receiver.mjs";
-import { requestHostJSON } from "./http.mjs";
+import { guardCharacterList, requestHostJSON } from "./http.mjs";
 
 const serviceUrl = new URL(import.meta.url);
 const { io } = await import(
@@ -16,6 +16,7 @@ if (!tavern.SillyTavern || !helper)
     "MISSING_HOST_API",
     "请在安装酒馆助手的酒馆全局脚本库运行同步工具",
   );
+guardCharacterList(tavern);
 
 async function request(endpoint, body, method = "POST") {
   return requestHostJSON(

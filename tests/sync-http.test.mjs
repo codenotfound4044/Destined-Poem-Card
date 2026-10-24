@@ -80,3 +80,35 @@ test("write responses, authorization failures and network failures are never ret
   );
   assert.equal(calls, 1);
 });
+
+test("the tavern's own character list requests are guarded against cache placeholders", async () => {
+  const { guardCharacterList } = await import("../tools/sync/http.mjs");
+  const calls = [];
+  let pending = 2;
+  const win = {
+    location: { origin: "https://tavern.example" },
+    fetch: async (input) => {
+      calls.push(String(input));
+      if (String(input).endsWith("/api/characters/all") && pending-- > 0)
+        return new Response("[]", {
+          headers: {
+            "x-cocktail-plus-state": "ASYNC-MISS",
+            "x-cocktail-plus-retry-after-ms": "100",
+          },
+        });
+      return Response.json([{ avatar: "card.png" }]);
+    },
+  };
+  const guarded = guardCharacterList(win);
+  assert.equal(win.fetch, guarded);
+  assert.equal(guardCharacterList(win), guarded, "重复启用不会套两层");
+  const response = await win.fetch("/api/characters/all", { method: "POST", body: "{}" });
+  assert.deepEqual(await response.json(), [{ avatar: "card.png" }]);
+  assert.equal(calls.length, 3);
+  // 其他接口和别的站点原样放行，不重读。
+  pending = 5;
+  calls.length = 0;
+  await win.fetch("/api/characters/get", { method: "POST" });
+  await win.fetch("https://elsewhere.example/api/characters/all");
+  assert.equal(calls.length, 2);
+});

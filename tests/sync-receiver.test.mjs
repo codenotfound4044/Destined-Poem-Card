@@ -593,3 +593,31 @@ test("a failed avatar write rolls back character and worldbook", async () => {
   assert.equal(canonical(f.state.character), canonical(f.original));
   assert.equal(canonical(f.state.worldbook), canonical(f.initialWorldbook));
 });
+
+test("helper refresh waits until the rebuilt character list contains the target", async () => {
+  const f = fixture();
+  const readList = f.host.listCharacters;
+  const refresh = f.host.refresh;
+  let loading = 2;
+  let refreshedAfterRebuild = false;
+  f.host.listCharacters = () =>
+    requestHostJSON(async () => {
+      if (f.state.writes.includes("character") && loading > 0) {
+        loading -= 1;
+        return new Response("[]", {
+          headers: {
+            "x-cocktail-plus-state": "ASYNC-MISS",
+            "x-cocktail-plus-retry-after-ms": "100",
+          },
+        });
+      }
+      return Response.json(await readList());
+    }, "/api/characters/all");
+  f.host.refresh = async (...args) => {
+    refreshedAfterRebuild = loading === 0;
+    return refresh?.(...args);
+  };
+  const result = await f.receiver.apply(await plan(f));
+  assert.equal(result.ok, true, JSON.stringify(result));
+  assert.equal(refreshedAfterRebuild, true);
+});

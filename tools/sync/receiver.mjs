@@ -312,6 +312,20 @@ export function createReceiver(host) {
           : { name: target.worldbookName, data: worldbook },
     };
   }
+  // 写卡会让 cocktail-plus 重建角色列表缓存。先等它重建好、确认目标卡还在，
+  // 再刷新酒馆助手和发编辑事件，免得酒馆在缓存重建时拿到空列表。
+  // 一直在重建也不算失败：后面的读回核对直接按文件读取，不依赖列表。
+  async function waitForCharacter(id) {
+    let list;
+    try {
+      list = await host.listCharacters();
+    } catch (error) {
+      if (error.code === "HOST_CACHE_LOADING") return;
+      throw error;
+    }
+    if (!list.some((item) => item.id === id))
+      fail("CHARACTER_NOT_FOUND", "写入后酒馆的角色列表里找不到目标卡");
+  }
   async function verifyAvatar(id, fingerprint, code = "VERIFY_FAILED") {
     if ((await avatarSnapshot(id)).fingerprint !== fingerprint)
       fail(code, "头像读回的画面和预期不一致");
@@ -507,6 +521,7 @@ export function createReceiver(host) {
           // 换头像要在写卡之后：酒馆会把当前卡数据重新写进新图片。
           if (withAvatar && plan.summary.avatar === "replace")
             await host.writeAvatar(plan.backup.character.id, plan.avatar.data);
+          await waitForCharacter(plan.backup.character.id);
           await host.refresh?.(
             plan.backup.character.id,
             target.worldbookName,
