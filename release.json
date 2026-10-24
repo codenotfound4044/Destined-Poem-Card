@@ -8,7 +8,7 @@
   "assets": {
     "version": "1.0.0",
     "tagPrefix": "assets-v",
-    "published": false,
+    "published": true,
     "cdnOrigins": [
       "https://testingcf.jsdelivr.net",
       "https://cdn.jsdelivr.net",
