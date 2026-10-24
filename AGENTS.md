@@ -13,6 +13,6 @@
 - 生成物由构建命令生成，不直接修补。按改动范围选检查（见 [修改与验证](docs/workflow.md)），`pnpm verify` 留给构建/Schema 改动和推送发布前。静态检查、构建通过和酒馆内实际运行分别报告。
 - 推送会整张覆盖目标酒馆里的卡，只推到用户指定的酒馆，见 [docs/sync.md](docs/sync.md)。不得把没执行的酒馆实测或模型生成说成已通过。已发布旧版本的 tag 和 CDN 链接不改写；不实现旧存档迁移，除非另有明确需求。
 - 仓库许可见 [LICENSE](LICENSE)，外部依赖遵循各自许可。创建远端仓库、发布、打 tag 和推送 Git 都要用户在当前任务里明确同意。
-- 版本号、卡名和世界书名只在开发组明确要发布、并给出版本号时才改（`pnpm card release <版本号>`）；平时改变量、改世界观都不动它们。版本习惯和变量结构对比只用于给建议，见 [docs/versioning.md](docs/versioning.md)。
+- 版本号、卡名和世界书名只在开发组明确要发布、并给出版本号时才改（`pnpm card release <版本号>`）；平时改变量、改世界观都不动它们。程序资源版本（`release.json` 的 `assets.version`，`pnpm card assets set`）、第三方依赖版本和各包 `package.json` 的版本同样只在开发组明确要求时才改；改了前端或脚本只在 `CHANGELOG.md`「未发布」下记一条。版本习惯和变量结构对比只用于给建议，见 [docs/versioning.md](docs/versioning.md)。
 - 工作台（`tools/workbench/`）直接读写开局数据、核心数据、地理数据、世界书核心名和变量结构对比。改了这些数据的格式、世界书的命名规则或变量结构时，要同步改工作台，对照表见 `.agents/skills/workbench/SKILL.md`；不兼容旧存档的改动在 `CHANGELOG.md` 记【不兼容】。
 - 提交信息和 PR 说明默认用中文，写法见 `.agents/skills/git-submit/SKILL.md`；外部贡献流程见 [CONTRIBUTING.md](CONTRIBUTING.md)。
