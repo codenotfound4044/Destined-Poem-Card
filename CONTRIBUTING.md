@@ -11,6 +11,7 @@
 ## 提交之前
 
 - 在工作台点「检查内容」，或运行 `pnpm card check`，确认没有报错。
+- 模型提示词按 [提示词写作与古风清理](docs/archaic-wording-cleanup.md) 审校文风，合并重复提醒，精简多余的防错要求。
 - 玩家能感知的改动，在 [CHANGELOG.md](CHANGELOG.md) 的「未发布」下面写一条。需要玩家手动改变量的，条目开头加【不兼容】。
 - 不要改 `release.json` 里的版本号、卡名和世界书名，版本由开发组发布时统一定。
 - 不要提交 `dist/`、`.cache/`、`imports/` 和自己酒馆里的数据。

@@ -4,6 +4,7 @@
 
 - 角色卡结构在 `card/`；开场白、脚本和正则分别由 `card/greetings/index.json`、`card/scripts/index.json`、`card/regex/index.json` 定义。世界书入口为 `worldbook/命定之诗.yaml`，可编辑数据在 `content/`，共享状态定义与公式在 `packages/game/`，界面与脚本在 `packages/frontend/`，自动化在 `packages/automation/`。构建配置和工具分别在 `build/`、`tools/`。
 - 世界书保留 tavern_sync YAML 与条目文件格式。用 `pnpm card map [query]` 和实际目录树定位条目，不重建手工维护的世界书 Markdown 全览。
+- 编写或修改模型提示词（含世界书、开场白与注入文案）时，按 [prompt-style](.agents/skills/prompt-style/SKILL.md) 审校文风与冗余。
 - Schema 以 `packages/game/src/schema/` 为唯一来源；共用资源公式放在 `packages/game/src/rules/`。修改前检查前端与自动化调用方，避免复制定义。
 - 数据文件即使扩展名是 `.json` 也可能使用 JSON5；按现有解析方式维护，不批量转成严格 JSON。
 - 宿主行为查锁定的参考源，按需使用 `pnpm refs restore/search/check/outdated/refresh/update`。更新参考版本需有任务依据，不把最新上游接口直接混入现有环境。
