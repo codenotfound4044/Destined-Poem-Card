@@ -81,7 +81,9 @@ async function fixture(t, handlers = {}, options = {}) {
     id: "test-client",
     connected: true,
     handshake: { headers: { origin: "http://127.0.0.1:8019" } },
-    timeout() {
+    timeouts: [],
+    timeout(ms) {
+      this.timeouts.push(ms);
       return this;
     },
     async emitWithAck(event, payload) {
@@ -394,4 +396,11 @@ test("sync and build arguments accept the asset source", () => {
     assetSource: "cdn",
     dryRun: true,
   });
+});
+test("writes wait longer than connection inspection", async (t) => {
+  const { run, socket } = await fixture(t, {}, { ackTimeout: 45000, writeTimeout: 240000 });
+  const job = await run();
+  assert.equal(job.state, "succeeded", JSON.stringify(job.error));
+  // inspect 用短等待；prepare、apply 要整份读写，用长等待。
+  assert.deepEqual(socket.timeouts, [45000, 240000, 240000]);
 });

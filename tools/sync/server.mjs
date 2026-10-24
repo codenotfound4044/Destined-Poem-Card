@@ -177,23 +177,37 @@ export class SyncCoordinator {
     release,
     io,
     ackTimeout = 45000,
+    // 预检、写入和恢复要整份读写卡和世界书，酒馆较慢时一次就要几十秒，单独放宽。
+    writeTimeout = 240000,
     build = buildCard,
     probe = probeCdn,
   }) {
-    Object.assign(this, { root, release, io, ackTimeout, build, probe });
+    Object.assign(this, {
+      root,
+      release,
+      io,
+      ackTimeout,
+      writeTimeout,
+      build,
+      probe,
+    });
     this.jobs = new Map();
     this.activeJob = null;
     this.defaults = null;
   }
   async ask(socket, event, data = {}) {
     let reply;
+    const timeout =
+      event === "workspace:inspect" ? this.ackTimeout : this.writeTimeout;
     try {
-      reply = await socket.timeout(this.ackTimeout).emitWithAck(event, data);
+      reply = await socket.timeout(timeout).emitWithAck(event, data);
     } catch (error) {
       throw new SyncError(
         "ACK_TIMEOUT",
-        `酒馆没有确认「${event}」完成。请查看连接和备份；不会自动重试写入。`,
-        { reason: error.message },
+        event === "workspace:inspect"
+          ? `酒馆没有回应「${event}」，请检查连接`
+          : `酒馆在 ${Math.round(timeout / 1000)} 秒内没有确认「${event}」完成，可能仍在写入或已经断开。请先在酒馆里确认这张卡的内容，再决定重新推送还是用备份恢复；不会自动重试写入。`,
+        { reason: error.message, timeoutMs: timeout },
       );
     }
     if (!reply || typeof reply.ok !== "boolean")
