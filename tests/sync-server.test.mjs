@@ -309,3 +309,89 @@ test("HTTP service exposes tools and geography but blocks private files and fore
   assert.equal(rejected.status, 403);
   assert.equal((await rejected.json()).error.code, "ORIGIN");
 });
+async function cdnRelease(directory, published) {
+  await fs.writeFile(
+    path.join(directory, "release.json"),
+    JSON.stringify({
+      repository: "example/card",
+      cardName: "测试卡",
+      version: "1.2.3",
+      localOrigin: "http://127.0.0.1:5173",
+      assets: {
+        version: "1.0.1",
+        published,
+        cdnOrigins: ["https://a.example.net", "https://b.example.net"],
+      },
+    }),
+  );
+}
+test("CDN pushes stop before any host query when assets are unpublished or missing", async (t) => {
+  const probed = [];
+  const { directory, events, run, coordinator } = await fixture(
+    t,
+    {},
+    {
+      probe: async (roots) => {
+        probed.push(roots);
+        return { root: undefined, missing: ["automation/index.js"] };
+      },
+    },
+  );
+  assert.throws(() => coordinator.start({ assetSource: "elsewhere" }), {
+    code: "ASSET_SOURCE",
+  });
+  await cdnRelease(directory, false);
+  let job = await run({ assetSource: "cdn" });
+  assert.equal(job.error.code, "ASSETS_UNPUBLISHED");
+  assert.equal(probed.length, 0);
+  await cdnRelease(directory, true);
+  job = await run({ assetSource: "cdn" });
+  assert.equal(job.error.code, "CDN_MISSING");
+  assert.deepEqual(probed[0], [
+    "https://a.example.net/gh/example/card@assets-v1.0.1/dist/release",
+    "https://b.example.net/gh/example/card@assets-v1.0.1/dist/release",
+  ]);
+  assert.deepEqual(events, []);
+  const status = await coordinator.status();
+  assert.deepEqual(status.assets, {
+    version: "1.0.1",
+    tag: "assets-v1.0.1",
+    published: true,
+  });
+});
+test("CDN pushes build with the CDN source and reject artifacts built for local", async (t) => {
+  const builds = [];
+  const { directory, run } = await fixture(
+    t,
+    {},
+    {
+      probe: async (roots) => ({ root: roots[1], missing: [] }),
+      build: async (...args) => builds.push(args),
+    },
+  );
+  await cdnRelease(directory, true);
+  let job = await run({ assetSource: "cdn" });
+  assert.equal(job.error.code, "ARTIFACT_MISMATCH");
+  const reportFile = path.join(directory, "dist/local/report.json");
+  const report = JSON.parse(await fs.readFile(reportFile, "utf8"));
+  await fs.writeFile(
+    reportFile,
+    JSON.stringify({ ...report, assetSource: "cdn" }),
+  );
+  job = await run({ assetSource: "cdn", noBuild: false });
+  assert.equal(job.state, "succeeded", JSON.stringify(job.error));
+  assert.equal(builds.at(-1)[3], "cdn");
+  assert.equal(job.assets.version, "1.0.1");
+  assert.match(job.assets.root, /^https:\/\/b\./);
+  // 本机资源的推送不受影响，也不会去查 CDN。
+  await fs.writeFile(reportFile, JSON.stringify(report));
+  job = await run();
+  assert.equal(job.state, "succeeded");
+  assert.equal(job.assets, undefined);
+});
+test("sync and build arguments accept the asset source", () => {
+  assert.deepEqual(parseSyncArgs(["--assets", "cdn", "--dry-run"]).options, {
+    assetSource: "cdn",
+    dryRun: true,
+  });
+});

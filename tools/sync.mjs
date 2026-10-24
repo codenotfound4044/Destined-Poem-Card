@@ -19,6 +19,7 @@ export function parseSyncArgs(args) {
     "--worldbook": "worldbookName",
     "--client": "clientId",
     "--profile": "profile",
+    "--assets": "assetSource",
   };
   for (let i = 0; i < args.length; i++) {
     const flag = args[i];

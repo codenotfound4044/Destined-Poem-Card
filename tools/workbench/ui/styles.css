@@ -121,6 +121,9 @@ input, select, textarea { font: inherit; color: var(--text); background: var(--s
 input:focus, select:focus, textarea:focus { outline: 2px solid color-mix(in srgb, var(--accent) 40%, transparent); outline-offset: 0; border-color: var(--accent); }
 textarea { resize: vertical; line-height: 1.55; }
 input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent); }
+input[type="radio"] { width: 16px; height: 16px; padding: 0; flex: none; accent-color: var(--accent); }
+.choice { display: flex; gap: 8px; align-items: flex-start; padding: 6px 0; cursor: pointer; }
+.choice input { margin-top: 3px; }
 label.field { display: flex; flex-direction: column; gap: 4px; }
 .field-label { font-size: 12.5px; color: var(--muted); font-weight: 550; display: flex; gap: 8px; align-items: center; }
 .field-label .key { font-family: var(--mono); font-size: 11px; opacity: 0.7; font-weight: 400; }

@@ -2,6 +2,7 @@ import { ref, computed, onMounted, onBeforeUnmount } from "/vendor/vue.js";
 import { api, toast } from "./lib.js";
 
 const PHASES = [
+  ["remote", "核对 CDN 资源"],
   ["build", "构建角色卡"],
   ["validate", "检查产物"],
   ["prepare", "读取酒馆里的旧内容"],
@@ -28,6 +29,10 @@ export const SyncView = {
     const jobMode = ref("");
     const busy = ref(false);
     const backups = ref([]);
+    // 界面资源从哪加载：本机（开发测试，只有这台电脑开着工作台时能显示）或已发布的 CDN。
+    const assetSource = ref("local");
+    const assets = computed(() => status.value?.assets ?? null);
+    const cdnReady = computed(() => assets.value?.published === true);
     let timer;
 
     const clients = computed(() => status.value?.clients ?? []);
@@ -37,7 +42,8 @@ export const SyncView = {
     const origin = computed(() => status.value?.origin ?? location.origin);
     const importLine = computed(() => `import '${origin.value}/sync/bridge.mjs';`);
     const ready = computed(() => client.value && !client.value.error && character.value && worldbook.value.trim() && !busy.value);
-    const phases = computed(() => (jobMode.value === "restore" ? RESTORE_PHASES : PHASES));
+    const jobSource = ref("local");
+    const phases = computed(() => (jobMode.value === "restore" ? RESTORE_PHASES : jobSource.value === "cdn" ? PHASES : PHASES.slice(1)));
     const phaseIndex = computed(() => phases.value.findIndex(([key]) => key === job.value?.phase));
 
     async function refresh() {
@@ -56,6 +62,7 @@ export const SyncView = {
           character.value = characters.value.some((c) => c.name === preferred) ? preferred : characters.value.length === 1 ? characters.value[0].name : "";
         }
         if (!worldbook.value) worldbook.value = data.defaults?.worldbookName ?? "";
+        if (assetSource.value === "cdn" && !cdnReady.value) assetSource.value = "local";
       } catch (error) {
         statusError.value = error.message;
       }
@@ -92,8 +99,9 @@ export const SyncView = {
       if (!dryRun && !confirm(`确定用工作区的内容覆盖酒馆里的「${character.value}」和世界书「${worldbook.value}」吗？\n\n在酒馆里对这张卡做过的改动都会被覆盖，包括改过的设定和开场白、世界书、头像、地图标记、地图上画的线、自定义开局保存的角色预设。\n聊天记录和游戏进度不受影响。\n\n覆盖前会自动备份，推错了可以一键恢复。`)) return;
       busy.value = true;
       job.value = null;
+      jobSource.value = assetSource.value;
       try {
-        const data = await api("/_workspace/jobs", { body: { clientId: clientId.value, characterName: character.value, worldbookName: worldbook.value.trim(), profile: "local", dryRun } });
+        const data = await api("/_workspace/jobs", { body: { clientId: clientId.value, characterName: character.value, worldbookName: worldbook.value.trim(), profile: "local", assetSource: assetSource.value, dryRun } });
         await follow(data.job, dryRun ? "check" : "sync");
         if (job.value.state === "succeeded") toast(dryRun ? "检查通过，可以推送" : "推送成功", "ok");
       } catch (error) {
@@ -166,7 +174,7 @@ export const SyncView = {
       };
       input.click();
     }
-    return { coverStamp, coverInfo, pickCover, status, statusError, clientId, character, worldbook, job, jobMode, busy, backups, clients, client, characters, worldbooks, origin, importLine, ready, phases, phaseIndex, refresh, pickCharacter, copyLine, start, restore, describeError, time };
+    return { assetSource, assets, cdnReady, coverStamp, coverInfo, pickCover, status, statusError, clientId, character, worldbook, job, jobMode, busy, backups, clients, client, characters, worldbooks, origin, importLine, ready, phases, phaseIndex, refresh, pickCharacter, copyLine, start, restore, describeError, time };
   },
   template: `
   <div class="page">
@@ -220,7 +228,7 @@ export const SyncView = {
           <div class="banner warn">
             <div class="grow">
               <b>推送会用工作区的内容整张覆盖这张卡，在酒馆里对这张卡做过的改动都会丢失。</b>
-              <p style="margin-top:6px">会被覆盖：在酒馆里改过的角色设定和开场白、整本世界书、头像（换成工作区的封面）、七个脚本和十条基础正则、地图标记和地图上画的线、自定义开局保存的角色预设。</p>
+              <p style="margin-top:6px">会被覆盖：在酒馆里改过的角色设定和开场白、整本世界书、头像（换成工作区的封面）、七个脚本和十条基础正则、地图标记和地图上画的线、自定义开局保存的角色预设、角色变量「资源版本」。</p>
               <p>会保留：聊天记录、聊天里的变量（游戏进度）、自动正则另外加的规则、脚本自己保存的运行数据，以及状态栏主题这类只在酒馆里产生的设置。</p>
               <p class="small" style="margin-top:4px">覆盖前会自动备份，推错了可以在下方「推送前的备份」里一键恢复。目标卡需要先在酒馆里导入过一次。</p>
             </div>
@@ -255,6 +263,11 @@ export const SyncView = {
         <div class="step-num">3</div>
         <div class="step-body">
           <h2>推送</h2>
+          <div class="field" style="max-width:640px">
+            <span class="field-label">界面和脚本从哪里加载</span>
+            <label class="choice"><input type="radio" value="local" v-model="assetSource" :disabled="busy" /><span><b>这台电脑（开发测试）</b><br /><span class="muted small">用工作区刚构建的界面，改完马上能看到。只有在这台电脑上、工作台开着时才能正常显示，手机或别的设备上会加载不出来。</span></span></label>
+            <label class="choice"><input type="radio" value="cdn" v-model="assetSource" :disabled="busy || !cdnReady" /><span><b>已发布的程序资源（CDN）<template v-if="assets?.version"> · 版本 {{ assets.version }}</template></b><br /><span class="muted small" v-if="cdnReady">从 CDN 加载已发布的界面，手机和别的设备也能用。推送前会先确认 CDN 上真的有这个版本的文件。玩家可以在角色变量「资源版本」里换版本。</span><span class="muted small" v-else-if="assets?.error">资源版本配置有问题：{{ assets.error }}</span><span class="muted small" v-else>资源版本 {{ assets?.version }} 还没有发布。发布标签 {{ assets?.tag }} 并运行 <code>pnpm card assets verify</code> 核对后才能选。</span></span></label>
+          </div>
           <p class="muted">建议先点「先检查」：会构建并核对目标，但不写入酒馆。</p>
           <div class="row">
             <button class="btn" :disabled="!ready" @click="start(true)">先检查（不写入）</button>
@@ -268,6 +281,7 @@ export const SyncView = {
             <div v-else-if="job.state === 'succeeded'" class="banner ok">
               <div class="grow">
                 <b>{{ jobMode === 'check' ? '检查通过，没有写入酒馆。' : jobMode === 'restore' ? '已恢复到备份时的样子。' : '推送成功！' }}</b>
+                <p v-if="job.assets" class="small muted">界面资源：CDN 版本 {{ job.assets.version }}（{{ job.assets.root }}）</p>
                 <p v-if="jobMode === 'sync'">刷新酒馆页面后就能看到新内容。如果效果不对，可以在下方「推送前的备份」里一键恢复。</p>
                 <p v-if="job.result?.summary" class="small muted">世界书 {{ job.result.summary.worldbookEntries }} 条 · 开场白 {{ job.result.summary.greetings }} 条 · 脚本 {{ job.result.summary.scripts }} 个 · 正则 {{ job.result.summary.managedRegex }} 条{{ job.result.summary.worldbookCreated ? ' · 新建了世界书' : '' }}{{ { replace: ' · 头像换成封面', unchanged: ' · 头像已是当前封面' }[job.result.summary.avatar] ?? '' }}</p>
               </div>

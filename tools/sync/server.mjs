@@ -5,6 +5,41 @@ import { spawn } from "node:child_process";
 import { Server } from "socket.io";
 import { cardIdentity } from "../lib/version.mjs";
 import { cleanCover } from "../lib/cover.mjs";
+import { assetsRelease, resourceConfig } from "../lib/resource-loader.mjs";
+
+// 推 CDN 资源前逐个入口确认 CDN 上真的有文件，避免只改了版本号、资源却没发布。
+export const CDN_ENTRIES = [
+  "frontend/status/index.html",
+  "frontend/home/index.html",
+  "frontend/custom_start/index.html",
+  "frontend/data_schema/index.js",
+  "automation/index.js",
+  "geography/load_compact.js",
+];
+export async function probeCdn(roots, entries = CDN_ENTRIES, timeout = 10000) {
+  const missing = [];
+  let reached;
+  for (const entry of entries) {
+    let ok = false;
+    for (const root of reached ? [reached, ...roots] : roots) {
+      try {
+        const response = await fetch(`${root}/${entry}`, {
+          method: "HEAD",
+          signal: AbortSignal.timeout(timeout),
+        });
+        if (response.ok) {
+          ok = true;
+          reached = root;
+          break;
+        }
+      } catch {
+        // 换下一个 CDN。
+      }
+    }
+    if (!ok) missing.push(entry);
+  }
+  return { root: reached, missing };
+}
 
 export class SyncError extends Error {
   constructor(code, message, details) {
@@ -98,14 +133,20 @@ export function installer(origin) {
   };
 }
 
-async function buildCard(root, profile, logPath) {
+async function buildCard(root, profile, logPath, assetSource) {
   await fs.mkdir(path.dirname(logPath), { recursive: true });
   const log = await fs.open(logPath, "w");
   try {
     await new Promise((resolve, reject) => {
       const child = spawn(
         process.execPath,
-        ["tools/card.mjs", "build", "--profile", profile],
+        [
+          "tools/card.mjs",
+          "build",
+          "--profile",
+          profile,
+          ...(assetSource ? ["--assets", assetSource] : []),
+        ],
         {
           cwd: root,
           stdio: ["ignore", log.fd, log.fd],
@@ -131,8 +172,15 @@ async function buildCard(root, profile, logPath) {
 }
 
 export class SyncCoordinator {
-  constructor({ root, release, io, ackTimeout = 45000, build = buildCard }) {
-    Object.assign(this, { root, release, io, ackTimeout, build });
+  constructor({
+    root,
+    release,
+    io,
+    ackTimeout = 45000,
+    build = buildCard,
+    probe = probeCdn,
+  }) {
+    Object.assign(this, { root, release, io, ackTimeout, build, probe });
     this.jobs = new Map();
     this.activeJob = null;
     this.defaults = null;
@@ -215,11 +263,17 @@ export class SyncCoordinator {
       }
     }
     // 发版命令会改 release.json，这里每次重新读，避免显示旧版本号。
-    const identity = cardIdentity(
-      JSON.parse(
-        await fs.readFile(path.join(this.root, "release.json"), "utf8"),
-      ),
+    const release = JSON.parse(
+      await fs.readFile(path.join(this.root, "release.json"), "utf8"),
     );
+    const identity = cardIdentity(release);
+    let assets;
+    try {
+      const info = assetsRelease(release);
+      assets = { version: info.version, tag: info.tag, published: info.published };
+    } catch (error) {
+      assets = { error: error.message };
+    }
     const clients = this.activeJob
       ? this.clients().map((s) => s.workspaceInfo ?? { id: s.id })
       : await Promise.all(this.clients().map((s) => this.inspect(s)));
@@ -231,6 +285,7 @@ export class SyncCoordinator {
         version: identity.version,
         worldbookName: identity.worldbook,
       },
+      assets,
       defaults: {
         characterName: identity.name,
         worldbookName: identity.worldbook,
@@ -286,6 +341,12 @@ export class SyncCoordinator {
         "UNPUBLISHED",
         "发布候选引用的 CDN 尚未发布，请使用 local 联调，或完成正式发布后同步",
       );
+    const assetSource =
+      request.assetSource ?? (profile === "release" ? "cdn" : "local");
+    if (!["local", "cdn"].includes(assetSource))
+      throw new SyncError("ASSET_SOURCE", "资源来源仅支持 local 或 cdn");
+    if (profile === "release" && assetSource !== "cdn")
+      throw new SyncError("ASSET_SOURCE", "release 构建只能使用 CDN 资源");
     const socket = this.socket(request.clientId);
     const job = {
       id: randomUUID(),
@@ -293,7 +354,7 @@ export class SyncCoordinator {
       state: "running",
       phase: "starting",
       startedAt: new Date().toISOString(),
-      request: { ...request, profile },
+      request: { ...request, profile, assetSource },
       socket,
     };
     job.logPath = `.cache/sync/logs/${job.id}.log`;
@@ -318,6 +379,31 @@ export class SyncCoordinator {
   async run(job) {
     const request = job.request;
     try {
+      if (job.kind !== "restore" && request.assetSource === "cdn") {
+        job.phase = "remote";
+        // 发版命令可能刚改过 release.json，这里重新读。
+        const release = JSON.parse(
+          await fs.readFile(path.join(this.root, "release.json"), "utf8"),
+        );
+        const assets = assetsRelease(release);
+        if (!assets.published)
+          throw new SyncError(
+            "ASSETS_UNPUBLISHED",
+            `程序资源 ${assets.version} 还没有标记为已发布。发布并核对后运行 pnpm card assets verify，再推 CDN 资源`,
+          );
+        const loader = resourceConfig(release, request.profile, "cdn");
+        const roots = loader.roots.map((root) =>
+          root.replace("{version}", loader.version),
+        );
+        const probed = await this.probe(roots);
+        if (probed.missing.length)
+          throw new SyncError(
+            "CDN_MISSING",
+            `CDN 上找不到资源版本 ${assets.version} 的部分文件，酒馆未写入`,
+            { missing: probed.missing, roots },
+          );
+        job.assets = { version: assets.version, tag: assets.tag, root: probed.root };
+      }
       const inspection = await this.inspect(job.socket);
       if (inspection.error)
         throw new SyncError(
@@ -373,6 +459,7 @@ export class SyncCoordinator {
             this.root,
             request.profile,
             path.join(this.root, job.logPath),
+            request.assetSource,
           );
         }
         job.phase = "validate";
@@ -388,6 +475,11 @@ export class SyncCoordinator {
           throw new SyncError(
             "ARTIFACT_MISMATCH",
             "角色卡与构建报告哈希不一致，请重新构建",
+          );
+        if ((report.assetSource ?? "local") !== request.assetSource)
+          throw new SyncError(
+            "ARTIFACT_MISMATCH",
+            "现有产物的资源来源和这次选择的不一样，请重新构建",
           );
         validateSyncCard(card);
         const target = {
