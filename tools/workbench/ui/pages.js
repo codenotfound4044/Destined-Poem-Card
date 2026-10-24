@@ -90,6 +90,14 @@ export const OverviewView = {
           <pre class="output">{{ data.check.stats.unregistered.join('\\n') }}</pre>
         </details>
       </section>
+
+      <section v-if="data.check.stats?.nesting?.length" class="card">
+        <details>
+          <summary><b style="color:var(--text)">{{ data.check.stats.nesting.length }} 处世界书条目可能挂错上级</b></summary>
+          <p class="muted small" style="margin:8px 0">这些条目的正文靠缩进接在上一条下面，但顺序号或黏性和上级对不上，同时触发时可能被拼到别的地点下面。不影响角色卡构建；修改方法见 docs/worldbook-tree.md。</p>
+          <pre class="output">{{ data.check.stats.nesting.join('\\n') }}</pre>
+        </details>
+      </section>
     </template>
   </div>`,
 };

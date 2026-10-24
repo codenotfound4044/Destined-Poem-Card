@@ -23,6 +23,7 @@ import {
   VERSION_PLACEHOLDER,
 } from "./lib/version.mjs";
 import { readCover } from "./lib/cover.mjs";
+import { nestingIssues, nestingItems } from "./lib/worldbook-nesting.mjs";
 
 async function filesAt(directory) {
   const results = [];
@@ -81,12 +82,18 @@ export async function check() {
   const unregistered = bodyFiles.filter(
     (f) => !referenced.has(resolveSource(f)),
   );
+  // 缩进挂靠检查只警告不报错：存量问题见 docs/worldbook-tree.md。
+  const nesting = nestingIssues(
+    await nestingItems(references, (file) => fs.readFile(file, "utf8")),
+  );
+  for (const issue of nesting) console.warn(`[挂靠] ${issue}`);
   const result = {
     entries: entries.length,
     enabled: entries.filter((e) => e.启用).length,
     scripts: scripts.length,
     regex: regex.length,
     unregistered,
+    nesting,
   };
   console.log(JSON.stringify(result, null, 2));
   return result;
@@ -341,6 +348,7 @@ export async function build(profile = "local") {
       entries: stats.entries,
       enabled: stats.enabled,
       unregistered: stats.unregistered.length,
+      nesting: stats.nesting.length,
     },
     assets: { base, urls },
     validation: {
