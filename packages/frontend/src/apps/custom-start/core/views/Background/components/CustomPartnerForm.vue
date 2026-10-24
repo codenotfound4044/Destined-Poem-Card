@@ -43,7 +43,7 @@ const LEVEL_GRADE_MAP: Record<number, { name: string; minGrade: number; maxGrade
   4: { name: '第四层级 (史诗)', minGrade: 13, maxGrade: 16 },
   5: { name: '第五层级 (传说)', minGrade: 17, maxGrade: 20 },
   6: { name: '第六层级 (神话)', minGrade: 21, maxGrade: 24 },
-  7: { name: '第七层级 (神祗)', minGrade: 25, maxGrade: 25 },
+  7: { name: '第七层级 (神祇)', minGrade: 25, maxGrade: 25 },
 };
 // 契约选项
 const contractOptions = [
