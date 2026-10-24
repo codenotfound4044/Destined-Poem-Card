@@ -77,7 +77,11 @@ export function staticFile(pathname) {
   if (pathname === "/" || pathname === "/sync/" || pathname === "/index.html")
     return "tools/workbench/ui/index.html";
   if (VENDOR[pathname]) return VENDOR[pathname];
-  if (["/sync/bridge.mjs", "/sync/receiver.mjs"].includes(pathname))
+  if (
+    ["/sync/bridge.mjs", "/sync/receiver.mjs", "/sync/http.mjs"].includes(
+      pathname,
+    )
+  )
     return "tools" + pathname;
   if (pathname.startsWith("/workbench/"))
     return "tools/workbench/ui/" + pathname.slice("/workbench/".length);

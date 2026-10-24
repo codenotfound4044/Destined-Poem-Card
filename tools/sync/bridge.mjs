@@ -1,5 +1,6 @@
 // Install as a global Tavern Helper script, outside the character's seven scripts.
 import { createReceiver, canonical, base64ToBytes } from "./receiver.mjs";
+import { requestHostJSON } from "./http.mjs";
 
 const serviceUrl = new URL(import.meta.url);
 const { io } = await import(
@@ -17,31 +18,16 @@ if (!tavern.SillyTavern || !helper)
   );
 
 async function request(endpoint, body, method = "POST") {
-  const response = await tavern.fetch(
-    new URL(endpoint, tavern.location.origin),
-    {
-      method,
-      headers: context().getRequestHeaders(),
-      ...(method === "POST" ? { body: JSON.stringify(body) } : {}),
-      cache: "no-store",
-    },
+  return requestHostJSON(
+    () =>
+      tavern.fetch(new URL(endpoint, tavern.location.origin), {
+        method,
+        headers: context().getRequestHeaders(),
+        ...(method === "POST" ? { body: JSON.stringify(body) } : {}),
+        cache: "no-store",
+      }),
+    endpoint,
   );
-  if (!response.ok) {
-    const detail = (await response.text()).slice(0, 2000);
-    throw problem(
-      response.status === 401 || response.status === 403
-        ? "HOST_AUTH"
-        : "HOST_HTTP",
-      `${endpoint} 返回 ${response.status}`,
-      { status: response.status, detail },
-    );
-  }
-  const text = await response.text();
-  try {
-    return JSON.parse(text);
-  } catch {
-    return text;
-  }
 }
 function exactPatch(old, desired) {
   const patch = {};
@@ -179,7 +165,11 @@ const adapter = {
   },
   async writeAvatar(id, base64) {
     const form = new FormData();
-    form.append("avatar", new Blob([base64ToBytes(base64)], { type: "image/png" }), "avatar.png");
+    form.append(
+      "avatar",
+      new Blob([base64ToBytes(base64)], { type: "image/png" }),
+      "avatar.png",
+    );
     form.append("avatar_url", id);
     const response = await tavern.fetch(
       new URL("/api/characters/edit-avatar", tavern.location.origin),
@@ -199,9 +189,13 @@ const adapter = {
     const thumbnail = `/thumbnail?type=avatar&file=${encodeURIComponent(id)}`;
     await Promise.allSettled([
       tavern.fetch(thumbnail, { cache: "reload" }),
-      tavern.fetch(`/characters/${encodeURIComponent(id)}`, { cache: "reload" }),
+      tavern.fetch(`/characters/${encodeURIComponent(id)}`, {
+        cache: "reload",
+      }),
     ]);
-    for (const img of tavern.document.querySelectorAll(`img[src^="${thumbnail}"]`)) {
+    for (const img of tavern.document.querySelectorAll(
+      `img[src^="${thumbnail}"]`,
+    )) {
       const src = img.src;
       img.src = "";
       img.src = src;

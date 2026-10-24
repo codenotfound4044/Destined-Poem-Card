@@ -170,25 +170,35 @@ export class SyncCoordinator {
     );
   }
   async inspect(socket) {
+    // 多个工作台页面轮询同一酒馆时，共用当前查询，避免撞上接收端的互斥锁。
+    if (socket.workspaceInspection) return socket.workspaceInspection;
+    socket.workspaceInspection = (async () => {
+      try {
+        const reply = await this.ask(socket, "workspace:inspect");
+        const { ok, ...info } = reply;
+        socket.workspaceInfo = {
+          id: socket.id,
+          ...info,
+          environment: {
+            ...info.environment,
+            origin:
+              socket.handshake?.headers?.origin ?? info.environment?.origin,
+          },
+        };
+      } catch (error) {
+        socket.workspaceInfo = {
+          id: socket.id,
+          environment: { origin: socket.handshake?.headers?.origin },
+          error: errorDetails(error),
+        };
+      }
+      return socket.workspaceInfo;
+    })();
     try {
-      const reply = await this.ask(socket, "workspace:inspect");
-      const { ok, ...info } = reply;
-      socket.workspaceInfo = {
-        id: socket.id,
-        ...info,
-        environment: {
-          ...info.environment,
-          origin: socket.handshake?.headers?.origin ?? info.environment?.origin,
-        },
-      };
-    } catch (error) {
-      socket.workspaceInfo = {
-        id: socket.id,
-        environment: { origin: socket.handshake?.headers?.origin },
-        error: errorDetails(error),
-      };
+      return await socket.workspaceInspection;
+    } finally {
+      delete socket.workspaceInspection;
     }
-    return socket.workspaceInfo;
   }
   async status() {
     if (!this.defaults) {

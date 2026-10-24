@@ -177,6 +177,36 @@ test("dry run prepares but never saves a backup or invokes apply", async (t) => 
     code: "ENOENT",
   });
 });
+test("concurrent inspections share one read of the connected tavern", async (t) => {
+  let releaseInspection;
+  let calls = 0;
+  const { coordinator, socket } = await fixture(t, {
+    "workspace:inspect": async () => {
+      calls++;
+      if (calls === 1)
+        await new Promise((resolve) => {
+          releaseInspection = resolve;
+        });
+      return {
+        ok: true,
+        environment: { origin: "http://127.0.0.1:8019", user: "test" },
+        characters: [{ name: "测试角色", id: "test.png" }],
+        worldbooks: ["测试世界书"],
+      };
+    },
+  });
+  const first = coordinator.inspect(socket);
+  const second = coordinator.inspect(socket);
+  assert.equal(calls, 1);
+  releaseInspection();
+  const results = await Promise.all([first, second]);
+  assert.deepEqual(results[0], results[1]);
+  assert.equal(results[0].characters[0].name, "测试角色");
+  assert.equal(socket.workspaceInspection, undefined);
+  await coordinator.inspect(socket);
+  assert.equal(calls, 2);
+});
+
 test("full backup is on disk before the receiver may mutate either resource", async (t) => {
   const { run, directory } = await fixture(t, {
     "workspace:apply": async (_, temporaryRoot) => {
@@ -262,6 +292,7 @@ test("HTTP service exposes tools and geography but blocks private files and fore
   const base = `http://127.0.0.1:${server.address().port}`;
   assert.equal((await fetch(base + "/")).status, 200);
   assert.equal((await fetch(base + "/sync/bridge.mjs")).status, 200);
+  assert.equal((await fetch(base + "/sync/http.mjs")).status, 200);
   assert.equal(
     (await fetch(base + "/content/geography/places.yaml")).status,
     200,

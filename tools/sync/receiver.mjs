@@ -423,10 +423,19 @@ export function createReceiver(host) {
         validateCard(card);
         let desiredAvatar = null;
         if (avatar !== undefined) {
-          if (!object(avatar) || typeof avatar.data !== "string" || !avatar.data)
+          if (
+            !object(avatar) ||
+            typeof avatar.data !== "string" ||
+            !avatar.data
+          )
             fail("INVALID_REQUEST", "头像数据格式无效");
-          const data = bytesToBase64(stripImageText(base64ToBytes(avatar.data)));
-          desiredAvatar = { data, fingerprint: await host.imageFingerprint(data) };
+          const data = bytesToBase64(
+            stripImageText(base64ToBytes(avatar.data)),
+          );
+          desiredAvatar = {
+            data,
+            fingerprint: await host.imageFingerprint(data),
+          };
         }
         const backup = await targetSnapshot(target, desiredAvatar !== null);
         const targetFingerprint = await fingerprint(backup);
@@ -510,7 +519,13 @@ export function createReceiver(host) {
             plan.worldbook,
           );
           if (withAvatar)
-            await verifyAvatar(plan.backup.character.id, plan.avatar.fingerprint);
+            await verifyAvatar(
+              plan.backup.character.id,
+              plan.avatar.fingerprint,
+            );
+          const savedFingerprint = await fingerprint(
+            await targetSnapshot(target, withAvatar),
+          );
           host.notify?.(
             "同步并读回校验成功；刷新酒馆页面后查看完整界面更新",
             "success",
@@ -519,9 +534,7 @@ export function createReceiver(host) {
             ok: true,
             operationId,
             summary: plan.summary,
-            targetFingerprint: await fingerprint(
-              await targetSnapshot(target, withAvatar),
-            ),
+            targetFingerprint: savedFingerprint,
             verified: true,
           };
         } catch (error) {

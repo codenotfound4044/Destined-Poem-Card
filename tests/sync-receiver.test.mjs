@@ -11,6 +11,7 @@ import {
   stripImageText,
 } from "../tools/sync/receiver.mjs";
 import { chunk, SIGNATURE } from "../tools/lib/png.mjs";
+import { requestHostJSON } from "../tools/sync/http.mjs";
 
 const copy = (value) => structuredClone(value);
 const target = { characterName: "测试角色", worldbookName: "测试世界书" };
@@ -38,7 +39,10 @@ function fixture() {
       extensions: {
         world: target.worldbookName,
         tavern_helper: {
-          variables: { map_markers: [{ id: "workspace-marker" }], map_drawings: [] },
+          variables: {
+            map_markers: [{ id: "workspace-marker" }],
+            map_drawings: [],
+          },
           scripts: Array.from({ length: 7 }, (_, index) => ({
             type: "script",
             id: `script-${index}`,
@@ -189,6 +193,53 @@ test("prepare is read-only; apply preserves identity, runtime-only variables, sc
   assert.equal(f.state.worldbook.entries[0].content, "完整世界书");
 });
 
+test("apply waits for the post-write character cache before reporting success", async () => {
+  const f = fixture();
+  const readList = f.host.listCharacters;
+  let cacheRebuilt = false;
+  let sawPlaceholder = false;
+  let notified = false;
+  f.host.listCharacters = () =>
+    requestHostJSON(async () => {
+      if (f.state.writes.includes("character") && !sawPlaceholder) {
+        sawPlaceholder = true;
+        return new Response("[]", {
+          headers: {
+            "x-cocktail-plus-state": "ASYNC-MISS",
+            "x-cocktail-plus-retry-after-ms": "100",
+          },
+        });
+      }
+      if (sawPlaceholder) cacheRebuilt = true;
+      return Response.json(await readList());
+    }, "/api/characters/all");
+  f.host.notify = (_, type) => {
+    assert.equal(type, "success");
+    assert.equal(cacheRebuilt, true);
+    notified = true;
+  };
+  const result = await f.receiver.apply(await plan(f));
+  assert.equal(result.ok, true, JSON.stringify(result));
+  assert.equal(result.verified, true);
+  assert.equal(sawPlaceholder, true);
+  assert.equal(notified, true);
+  assert.deepEqual(f.state.writes, ["worldbook", "character", "refresh"]);
+});
+
+test("a failed final snapshot never emits a premature success notification", async () => {
+  const f = fixture();
+  const readList = f.host.listCharacters;
+  const notifications = [];
+  f.host.listCharacters = async () =>
+    f.state.writes.includes("character") ? [] : readList();
+  f.host.notify = (_, type) => notifications.push(type);
+  const result = await f.receiver.apply(await plan(f));
+  assert.equal(result.error.code, "CHARACTER_NOT_FOUND");
+  assert.equal(result.error.rollback.ok, true);
+  assert.deepEqual(notifications, ["error"]);
+  assert.deepEqual(f.state.character, f.original);
+});
+
 test("optional [去古风] regex rules are accepted and keep the toggle chosen in the tavern", async () => {
   const f = fixture();
   const optional = (id, disabled) => ({
@@ -204,7 +255,9 @@ test("optional [去古风] regex rules are accepted and keep the toggle chosen i
     optional("opt-new", true),
   );
   // 酒馆里已经手动打开过 opt-on；opt-new 是新加的规则。
-  f.state.character.data.extensions.regex_scripts.push(optional("opt-on", false));
+  f.state.character.data.extensions.regex_scripts.push(
+    optional("opt-on", false),
+  );
   const result = await f.receiver.apply(await plan(f));
   assert.equal(result.ok, true, JSON.stringify(result));
   assert.equal(result.summary.managedRegex, 12);
@@ -509,7 +562,11 @@ test("avatar is replaced after the character, compared by image only, and kept i
   const result = await f.receiver.apply(request);
   assert.equal(result.ok, true, JSON.stringify(result));
   assert.equal(result.summary.avatar, "replace");
-  assert.deepEqual(f.state.writes.slice(0, 3), ["worldbook", "character", "avatar"]);
+  assert.deepEqual(f.state.writes.slice(0, 3), [
+    "worldbook",
+    "character",
+    "avatar",
+  ]);
   assert.deepEqual(
     Buffer.from(stripImageText(f.state.avatar)),
     Buffer.from(tinyPNG(2)),
