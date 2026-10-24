@@ -1,0 +1,818 @@
+[
+  {
+    "id": "f97604fe-1c85-40c5-980d-38f42c934a0c",
+    "scriptName": "[去古风]掌柜→老板",
+    "disabled": true,
+    "runOnEdit": false,
+    "findRegex": "/掌柜的|掌柜/g",
+    "trimStrings": [],
+    "replaceString": "老板",
+    "placement": [
+      2
+    ],
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null,
+    "markdownOnly": true,
+    "promptOnly": true
+  },
+  {
+    "id": "08d7faeb-5a86-4e41-b19c-d15330155c5f",
+    "scriptName": "[去古风]店小二→侍者",
+    "disabled": true,
+    "runOnEdit": false,
+    "findRegex": "/店小二|小二(?![十百千万])/g",
+    "trimStrings": [],
+    "replaceString": "侍者",
+    "placement": [
+      2
+    ],
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null,
+    "markdownOnly": true,
+    "promptOnly": true
+  },
+  {
+    "id": "579e59d9-ecca-4137-bdfa-c6d9ac38132c",
+    "scriptName": "[去古风]客官→客人",
+    "disabled": true,
+    "runOnEdit": false,
+    "findRegex": "/客官/g",
+    "trimStrings": [],
+    "replaceString": "客人",
+    "placement": [
+      2
+    ],
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null,
+    "markdownOnly": true,
+    "promptOnly": true
+  },
+  {
+    "id": "1924f728-6809-4902-8e96-981e8508e3d6",
+    "scriptName": "[去古风]一炷香/一盏茶的工夫→一会儿",
+    "disabled": true,
+    "runOnEdit": false,
+    "findRegex": "/[半一](?:炷香|盏茶)的?(?:功夫|工夫|时间)/g",
+    "trimStrings": [],
+    "replaceString": "一会儿",
+    "placement": [
+      2
+    ],
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null,
+    "markdownOnly": true,
+    "promptOnly": true
+  },
+  {
+    "id": "02dc99a0-3539-4b14-82b2-1574dc6fb299",
+    "scriptName": "[去古风]一刻钟→十五分钟",
+    "disabled": true,
+    "runOnEdit": false,
+    "findRegex": "/一刻钟/g",
+    "trimStrings": [],
+    "replaceString": "十五分钟",
+    "placement": [
+      2
+    ],
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null,
+    "markdownOnly": true,
+    "promptOnly": true
+  },
+  {
+    "id": "9ddf3560-39a6-49cf-b034-d47c0a70fa8d",
+    "scriptName": "[去古风]半刻钟→几分钟",
+    "disabled": true,
+    "runOnEdit": false,
+    "findRegex": "/半刻钟/g",
+    "trimStrings": [],
+    "replaceString": "几分钟",
+    "placement": [
+      2
+    ],
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null,
+    "markdownOnly": true,
+    "promptOnly": true
+  },
+  {
+    "id": "ce8bab17-697b-4767-8fd3-c1110c1c54ea",
+    "scriptName": "[去古风]半个时辰→一个小时",
+    "disabled": true,
+    "runOnEdit": false,
+    "findRegex": "/半个时辰/g",
+    "trimStrings": [],
+    "replaceString": "一个小时",
+    "placement": [
+      2
+    ],
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null,
+    "markdownOnly": true,
+    "promptOnly": true
+  },
+  {
+    "id": "b75b0c52-928a-48b9-86b0-7e4839d8a007",
+    "scriptName": "[去古风]一个时辰→两个小时",
+    "disabled": true,
+    "runOnEdit": false,
+    "findRegex": "/一个时辰/g",
+    "trimStrings": [],
+    "replaceString": "两个小时",
+    "placement": [
+      2
+    ],
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null,
+    "markdownOnly": true,
+    "promptOnly": true
+  },
+  {
+    "id": "0b4ac88f-c0bb-4c6b-89c4-71a59ae8127f",
+    "scriptName": "[去古风]几个时辰→几个小时",
+    "disabled": true,
+    "runOnEdit": false,
+    "findRegex": "/个时辰/g",
+    "trimStrings": [],
+    "replaceString": "个小时",
+    "placement": [
+      2
+    ],
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null,
+    "markdownOnly": true,
+    "promptOnly": true
+  },
+  {
+    "id": "35c75d50-9920-4271-9338-33d2348355e1",
+    "scriptName": "[去古风]时辰→时间",
+    "disabled": true,
+    "runOnEdit": false,
+    "findRegex": "/时辰/g",
+    "trimStrings": [],
+    "replaceString": "时间",
+    "placement": [
+      2
+    ],
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null,
+    "markdownOnly": true,
+    "promptOnly": true
+  },
+  {
+    "id": "37eed36f-9f34-43ca-a375-d1c58489e452",
+    "scriptName": "[去古风]半晌→好一会儿",
+    "disabled": true,
+    "runOnEdit": false,
+    "findRegex": "/半晌/g",
+    "trimStrings": [],
+    "replaceString": "好一会儿",
+    "placement": [
+      2
+    ],
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null,
+    "markdownOnly": true,
+    "promptOnly": true
+  },
+  {
+    "id": "e16deeda-44a1-495d-bb63-28937f89fbbc",
+    "scriptName": "[去古风]莫要→不要",
+    "disabled": true,
+    "runOnEdit": false,
+    "findRegex": "/莫要/g",
+    "trimStrings": [],
+    "replaceString": "不要",
+    "placement": [
+      2
+    ],
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null,
+    "markdownOnly": true,
+    "promptOnly": true
+  },
+  {
+    "id": "c0951ffe-f9be-4a1e-9a42-d4f49387a3a4",
+    "scriptName": "[去古风]何须→何必",
+    "disabled": true,
+    "runOnEdit": false,
+    "findRegex": "/何须/g",
+    "trimStrings": [],
+    "replaceString": "何必",
+    "placement": [
+      2
+    ],
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null,
+    "markdownOnly": true,
+    "promptOnly": true
+  },
+  {
+    "id": "956cf926-92fc-413e-af0d-5d4f83566be0",
+    "scriptName": "[去古风]床榻/软榻→床",
+    "disabled": true,
+    "runOnEdit": false,
+    "findRegex": "/床榻|软榻|龙榻/g",
+    "trimStrings": [],
+    "replaceString": "床",
+    "placement": [
+      2
+    ],
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null,
+    "markdownOnly": true,
+    "promptOnly": true
+  },
+  {
+    "id": "886b1b05-64bf-49da-b7f7-9ca3b17a407a",
+    "scriptName": "[去古风]大氅→斗篷",
+    "disabled": true,
+    "runOnEdit": false,
+    "findRegex": "/大氅/g",
+    "trimStrings": [],
+    "replaceString": "斗篷",
+    "placement": [
+      2
+    ],
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null,
+    "markdownOnly": true,
+    "promptOnly": true
+  },
+  {
+    "id": "6334bc16-7ce0-434c-abd6-76c18f221cd2",
+    "scriptName": "[去古风]修为→实力",
+    "disabled": true,
+    "runOnEdit": false,
+    "findRegex": "/修为/g",
+    "trimStrings": [],
+    "replaceString": "实力",
+    "placement": [
+      2
+    ],
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null,
+    "markdownOnly": true,
+    "promptOnly": true
+  },
+  {
+    "id": "7accf95c-6b5c-4073-a523-3023f4e34bde",
+    "scriptName": "[去古风]神通→能力",
+    "disabled": true,
+    "runOnEdit": false,
+    "findRegex": "/神通/g",
+    "trimStrings": [],
+    "replaceString": "能力",
+    "placement": [
+      2
+    ],
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null,
+    "markdownOnly": true,
+    "promptOnly": true
+  },
+  {
+    "id": "36026f48-05ed-4319-8924-4762c65c8a3b",
+    "scriptName": "[去古风]阵眼→法阵核心",
+    "disabled": true,
+    "runOnEdit": false,
+    "findRegex": "/(?<!一)阵眼(?![花冒发前])/g",
+    "trimStrings": [],
+    "replaceString": "法阵核心",
+    "placement": [
+      2
+    ],
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null,
+    "markdownOnly": true,
+    "promptOnly": true
+  },
+  {
+    "id": "94b4333b-a31e-4d6a-8c63-4ffd5e26e136",
+    "scriptName": "[去古风]阵法→法阵",
+    "disabled": true,
+    "runOnEdit": false,
+    "findRegex": "/阵法/g",
+    "trimStrings": [],
+    "replaceString": "法阵",
+    "placement": [
+      2
+    ],
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null,
+    "markdownOnly": true,
+    "promptOnly": true
+  },
+  {
+    "id": "01ec94b8-d09f-4d98-903f-313aa1005575",
+    "scriptName": "[去古风]文牒/路引→通行证",
+    "disabled": true,
+    "runOnEdit": false,
+    "findRegex": "/通关文牒|文牒|路引/g",
+    "trimStrings": [],
+    "replaceString": "通行证",
+    "placement": [
+      2
+    ],
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null,
+    "markdownOnly": true,
+    "promptOnly": true
+  },
+  {
+    "id": "f42c7dd9-deae-4899-9692-b494361f20b6",
+    "scriptName": "[去古风]恩准→批准",
+    "disabled": true,
+    "runOnEdit": false,
+    "findRegex": "/恩准/g",
+    "trimStrings": [],
+    "replaceString": "批准",
+    "placement": [
+      2
+    ],
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null,
+    "markdownOnly": true,
+    "promptOnly": true
+  },
+  {
+    "id": "fed53f3e-2f5b-4131-95f2-4b1205af5f26",
+    "scriptName": "[去古风]屏退左右→让侍从退下",
+    "disabled": true,
+    "runOnEdit": false,
+    "findRegex": "/屏退左右/g",
+    "trimStrings": [],
+    "replaceString": "让侍从退下",
+    "placement": [
+      2
+    ],
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null,
+    "markdownOnly": true,
+    "promptOnly": true
+  },
+  {
+    "id": "443cd252-6ef1-4280-aa17-e56a00f6916f",
+    "scriptName": "[去古风]屏退→遣退",
+    "disabled": true,
+    "runOnEdit": false,
+    "findRegex": "/屏退/g",
+    "trimStrings": [],
+    "replaceString": "遣退",
+    "placement": [
+      2
+    ],
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null,
+    "markdownOnly": true,
+    "promptOnly": true
+  },
+  {
+    "id": "672fa999-e1cc-4c69-88a7-676a66ee2fc7",
+    "scriptName": "[去古风]请安→问好",
+    "disabled": true,
+    "runOnEdit": false,
+    "findRegex": "/请安/g",
+    "trimStrings": [],
+    "replaceString": "问好",
+    "placement": [
+      2
+    ],
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null,
+    "markdownOnly": true,
+    "promptOnly": true
+  },
+  {
+    "id": "161336b7-e2c1-45a2-a0b0-c6bf7f80f04f",
+    "scriptName": "[去古风]龙椅→王座",
+    "disabled": true,
+    "runOnEdit": false,
+    "findRegex": "/龙椅/g",
+    "trimStrings": [],
+    "replaceString": "王座",
+    "placement": [
+      2
+    ],
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null,
+    "markdownOnly": true,
+    "promptOnly": true
+  },
+  {
+    "id": "4c444754-1710-44ec-8bbe-9adeba586ea3",
+    "scriptName": "[去古风]龙袍→王袍",
+    "disabled": true,
+    "runOnEdit": false,
+    "findRegex": "/龙袍/g",
+    "trimStrings": [],
+    "replaceString": "王袍",
+    "placement": [
+      2
+    ],
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null,
+    "markdownOnly": true,
+    "promptOnly": true
+  },
+  {
+    "id": "a6ac408f-7c59-423b-b2a4-7918be7b266a",
+    "scriptName": "[去古风]衙门→治安所",
+    "disabled": true,
+    "runOnEdit": false,
+    "findRegex": "/衙门/g",
+    "trimStrings": [],
+    "replaceString": "治安所",
+    "placement": [
+      2
+    ],
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null,
+    "markdownOnly": true,
+    "promptOnly": true
+  },
+  {
+    "id": "8f221d59-4f49-418d-8525-4624873ab64f",
+    "scriptName": "[去古风]中式自称→我",
+    "disabled": true,
+    "runOnEdit": false,
+    "findRegex": "/本座|老身|妾身|奴家|咱家|寡人|末将|微臣|卑职/g",
+    "trimStrings": [],
+    "replaceString": "我",
+    "placement": [
+      2
+    ],
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null,
+    "markdownOnly": true,
+    "promptOnly": true
+  },
+  {
+    "id": "673b3399-801e-475f-a9c7-5afc23cdd86c",
+    "scriptName": "[去古风]拱手/抱拳→行礼",
+    "disabled": true,
+    "runOnEdit": false,
+    "findRegex": "/拱手(?!相让|让)|抱拳/g",
+    "trimStrings": [],
+    "replaceString": "行礼",
+    "placement": [
+      2
+    ],
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null,
+    "markdownOnly": true,
+    "promptOnly": true
+  },
+  {
+    "id": "f2185d7c-2388-4def-a229-f24f1a1e3b1d",
+    "scriptName": "[去古风]作揖→鞠躬",
+    "disabled": true,
+    "runOnEdit": false,
+    "findRegex": "/作揖/g",
+    "trimStrings": [],
+    "replaceString": "鞠躬",
+    "placement": [
+      2
+    ],
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null,
+    "markdownOnly": true,
+    "promptOnly": true
+  },
+  {
+    "id": "47118bde-bf69-489b-8616-0c47a50f404c",
+    "scriptName": "[去古风]铜板/铜钱→铜币",
+    "disabled": true,
+    "runOnEdit": false,
+    "findRegex": "/铜板|铜子儿|铜钱/g",
+    "trimStrings": [],
+    "replaceString": "铜币",
+    "placement": [
+      2
+    ],
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null,
+    "markdownOnly": true,
+    "promptOnly": true
+  },
+  {
+    "id": "f9abf0e3-0c89-444c-b7b4-624fde84a122",
+    "scriptName": "[去古风]碎银/银两→银币",
+    "disabled": true,
+    "runOnEdit": false,
+    "findRegex": "/碎银子|碎银|银两/g",
+    "trimStrings": [],
+    "replaceString": "银币",
+    "placement": [
+      2
+    ],
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null,
+    "markdownOnly": true,
+    "promptOnly": true
+  },
+  {
+    "id": "6847568b-74a6-4d1a-8870-64699be39045",
+    "scriptName": "[去古风]真气/内力/灵力→魔力",
+    "disabled": true,
+    "runOnEdit": false,
+    "findRegex": "/真气|(?<!任)内力|灵力/g",
+    "trimStrings": [],
+    "replaceString": "魔力",
+    "placement": [
+      2
+    ],
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null,
+    "markdownOnly": true,
+    "promptOnly": true
+  },
+  {
+    "id": "374d0891-d465-4d5d-bf45-d60ca4ac3ae8",
+    "scriptName": "[去古风]经脉→魔力回路",
+    "disabled": true,
+    "runOnEdit": false,
+    "findRegex": "/经脉|经络/g",
+    "trimStrings": [],
+    "replaceString": "魔力回路",
+    "placement": [
+      2
+    ],
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null,
+    "markdownOnly": true,
+    "promptOnly": true
+  },
+  {
+    "id": "0c8a00d0-fa47-4178-b486-5810c6a9a41a",
+    "scriptName": "[去古风]识海→意识深处",
+    "disabled": true,
+    "runOnEdit": false,
+    "findRegex": "/(?<!意)识海/g",
+    "trimStrings": [],
+    "replaceString": "意识深处",
+    "placement": [
+      2
+    ],
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null,
+    "markdownOnly": true,
+    "promptOnly": true
+  },
+  {
+    "id": "6d1687a8-8126-4db0-bb17-fb0b5839bc5d",
+    "scriptName": "[去古风]神识→精神感知",
+    "disabled": true,
+    "runOnEdit": false,
+    "findRegex": "/神识/g",
+    "trimStrings": [],
+    "replaceString": "精神感知",
+    "placement": [
+      2
+    ],
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null,
+    "markdownOnly": true,
+    "promptOnly": true
+  },
+  {
+    "id": "97a8a691-c4fb-4422-9a8e-bef712363b4c",
+    "scriptName": "[去古风]神魂→灵魂",
+    "disabled": true,
+    "runOnEdit": false,
+    "findRegex": "/神魂(?!颠倒)/g",
+    "trimStrings": [],
+    "replaceString": "灵魂",
+    "placement": [
+      2
+    ],
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null,
+    "markdownOnly": true,
+    "promptOnly": true
+  },
+  {
+    "id": "8fa4d639-f28c-4b95-805e-b64e8611d863",
+    "scriptName": "[去古风]机缘→机遇",
+    "disabled": true,
+    "runOnEdit": false,
+    "findRegex": "/机缘/g",
+    "trimStrings": [],
+    "replaceString": "机遇",
+    "placement": [
+      2
+    ],
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null,
+    "markdownOnly": true,
+    "promptOnly": true
+  },
+  {
+    "id": "0851a532-5847-402c-81dc-bd9253873ebc",
+    "scriptName": "[去古风]道友→朋友",
+    "disabled": true,
+    "runOnEdit": false,
+    "findRegex": "/道友/g",
+    "trimStrings": [],
+    "replaceString": "朋友",
+    "placement": [
+      2
+    ],
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null,
+    "markdownOnly": true,
+    "promptOnly": true
+  },
+  {
+    "id": "21bad858-6e61-441e-806c-27901a413cfe",
+    "scriptName": "[去古风]孽障/孽畜→混账",
+    "disabled": true,
+    "runOnEdit": false,
+    "findRegex": "/孽障|孽畜/g",
+    "trimStrings": [],
+    "replaceString": "混账",
+    "placement": [
+      2
+    ],
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null,
+    "markdownOnly": true,
+    "promptOnly": true
+  },
+  {
+    "id": "cbc0d1a5-a913-4dc9-8ffd-f4da93f2c6c3",
+    "scriptName": "[去古风]街坊→邻居",
+    "disabled": true,
+    "runOnEdit": false,
+    "findRegex": "/街坊邻居|街坊/g",
+    "trimStrings": [],
+    "replaceString": "邻居",
+    "placement": [
+      2
+    ],
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null,
+    "markdownOnly": true,
+    "promptOnly": true
+  },
+  {
+    "id": "cba97629-5968-4307-98b2-708dbb0200a5",
+    "scriptName": "[去古风]货栈→货仓",
+    "disabled": true,
+    "runOnEdit": false,
+    "findRegex": "/货栈/g",
+    "trimStrings": [],
+    "replaceString": "货仓",
+    "placement": [
+      2
+    ],
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null,
+    "markdownOnly": true,
+    "promptOnly": true
+  },
+  {
+    "id": "2f07c34c-745c-4fd8-b6cd-3eaff22233ba",
+    "scriptName": "[去古风]演武场→训练场",
+    "disabled": true,
+    "runOnEdit": false,
+    "findRegex": "/演武场/g",
+    "trimStrings": [],
+    "replaceString": "训练场",
+    "placement": [
+      2
+    ],
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null,
+    "markdownOnly": true,
+    "promptOnly": true
+  },
+  {
+    "id": "7f275943-c75a-4c51-b8ae-6530a7f09297",
+    "scriptName": "[去古风]三更半夜→深夜",
+    "disabled": true,
+    "runOnEdit": false,
+    "findRegex": "/三更半夜|半夜三更/g",
+    "trimStrings": [],
+    "replaceString": "深夜",
+    "placement": [
+      2
+    ],
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null,
+    "markdownOnly": true,
+    "promptOnly": true
+  },
+  {
+    "id": "8b23d906-f935-4e76-903a-3ef919ca6bbb",
+    "scriptName": "[去古风]兵刃→武器",
+    "disabled": true,
+    "runOnEdit": false,
+    "findRegex": "/兵刃/g",
+    "trimStrings": [],
+    "replaceString": "武器",
+    "placement": [
+      2
+    ],
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null,
+    "markdownOnly": true,
+    "promptOnly": true
+  },
+  {
+    "id": "493ad64d-9462-4c20-9ea1-61928dd1d3ef",
+    "scriptName": "[去古风]青丝→长发",
+    "disabled": true,
+    "runOnEdit": false,
+    "findRegex": "/青丝/g",
+    "trimStrings": [],
+    "replaceString": "长发",
+    "placement": [
+      2
+    ],
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null,
+    "markdownOnly": true,
+    "promptOnly": true
+  },
+  {
+    "id": "071a4ec6-3855-4b13-b7ef-b7e4e1c0ecf3",
+    "scriptName": "[去古风]衣袂→衣摆",
+    "disabled": true,
+    "runOnEdit": false,
+    "findRegex": "/衣袂/g",
+    "trimStrings": [],
+    "replaceString": "衣摆",
+    "placement": [
+      2
+    ],
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null,
+    "markdownOnly": true,
+    "promptOnly": true
+  },
+  {
+    "id": "99210b14-3560-496a-affc-fe8ea7710118",
+    "scriptName": "[去古风]方才→刚才",
+    "disabled": true,
+    "runOnEdit": false,
+    "findRegex": "/方才/g",
+    "trimStrings": [],
+    "replaceString": "刚才",
+    "placement": [
+      2
+    ],
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null,
+    "markdownOnly": true,
+    "promptOnly": true
+  }
+]

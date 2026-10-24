@@ -5,6 +5,11 @@ const object = (value) =>
 const fail = (code, message, details) => {
   throw Object.assign(new Error(message), { code, details });
 };
+// 「[去古风]」开头的正则默认关闭，玩家在酒馆里自行开关；同步时保留酒馆里的开关状态。
+const OPTIONAL_REGEX_PREFIX = "[去古风]";
+const optionalRegex = (rule) =>
+  typeof rule?.scriptName === "string" &&
+  rule.scriptName.startsWith(OPTIONAL_REGEX_PREFIX);
 export function canonical(value) {
   if (Array.isArray(value)) return `[${value.map(canonical).join(",")}]`;
   if (object(value))
@@ -126,7 +131,7 @@ function validateCard(card) {
     !Array.isArray(scripts) ||
     flatten(scripts).length !== 7 ||
     !Array.isArray(regex) ||
-    regex.length !== 10
+    regex.filter((rule) => !optionalRegex(rule)).length !== 10
   )
     fail("INVALID_CARD", "本工作区同步输入必须包含七个脚本和十条基础正则");
   assertIds(flatten(scripts), "脚本");
@@ -213,6 +218,15 @@ function buildCharacter(old, source, target) {
           data: mergeData(oldScripts.get(script.id)?.data, script.data),
         };
   const managedIds = new Set(incoming.regex_scripts.map((rule) => rule.id));
+  const oldRegex = new Map(
+    (previous.regex_scripts ?? []).map((rule) => [rule.id, rule]),
+  );
+  const keepOptionalToggle = (rule) => {
+    const old = oldRegex.get(rule.id);
+    return optionalRegex(rule) && old && typeof old.disabled === "boolean"
+      ? { ...clone(rule), disabled: old.disabled }
+      : clone(rule);
+  };
   result.data.extensions = {
     ...clone(previous),
     ...clone(incoming),
@@ -229,7 +243,7 @@ function buildCharacter(old, source, target) {
       scripts: newHelper.scripts.map(preserveScriptData),
     },
     regex_scripts: [
-      ...clone(incoming.regex_scripts),
+      ...incoming.regex_scripts.map(keepOptionalToggle),
       ...clone(
         (previous.regex_scripts ?? []).filter(
           (rule) => !managedIds.has(rule.id),
@@ -427,8 +441,10 @@ export function createReceiver(host) {
           worldbookEntries: card.data.character_book.entries.length,
           greetings: 3,
           scripts: 7,
-          managedRegex: 10,
-          preservedRegex: desired.data.extensions.regex_scripts.length - 10,
+          managedRegex: card.data.extensions.regex_scripts.length,
+          preservedRegex:
+            desired.data.extensions.regex_scripts.length -
+            card.data.extensions.regex_scripts.length,
           worldbookCreated: backup.worldbook === null,
           avatar: desiredAvatar
             ? desiredAvatar.fingerprint === backup.avatar.fingerprint

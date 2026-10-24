@@ -189,6 +189,41 @@ test("prepare is read-only; apply preserves identity, runtime-only variables, sc
   assert.equal(f.state.worldbook.entries[0].content, "完整世界书");
 });
 
+test("optional [去古风] regex rules are accepted and keep the toggle chosen in the tavern", async () => {
+  const f = fixture();
+  const optional = (id, disabled) => ({
+    id,
+    scriptName: `[去古风]规则${id}`,
+    disabled,
+    findRegex: "/掌柜/g",
+    replaceString: "老板",
+    placement: [2],
+  });
+  f.card.data.extensions.regex_scripts.push(
+    optional("opt-on", true),
+    optional("opt-new", true),
+  );
+  // 酒馆里已经手动打开过 opt-on；opt-new 是新加的规则。
+  f.state.character.data.extensions.regex_scripts.push(optional("opt-on", false));
+  const result = await f.receiver.apply(await plan(f));
+  assert.equal(result.ok, true, JSON.stringify(result));
+  assert.equal(result.summary.managedRegex, 12);
+  const rules = new Map(
+    f.state.character.data.extensions.regex_scripts.map((r) => [r.id, r]),
+  );
+  assert.equal(rules.get("opt-on").disabled, false);
+  assert.equal(rules.get("opt-new").disabled, true);
+  assert.equal(rules.get("regex-0").replaceString, "world");
+});
+
+test("a card without exactly ten base regex rules is rejected", async () => {
+  const f = fixture();
+  f.card.data.extensions.regex_scripts.pop();
+  const result = await f.receiver.prepare(f.request);
+  assert.equal(result.ok, false);
+  assert.equal(result.error.code, "INVALID_CARD");
+});
+
 test("same-name conflicts and absent characters stop before all writes", async () => {
   const f = fixture();
   f.state.characters.push({ name: target.characterName, id: "duplicate.png" });
