@@ -3,6 +3,7 @@ import { ThemeList } from '../../config/theme-presets';
 import { useEditorSettingStore, useThemeStore } from '../../core/stores';
 import { Card } from '../../shared/components';
 import { ToggleEditor } from '../../shared/components/editors/ToggleEditor/ToggleEditor';
+import { ResourceVersionCard } from './ResourceVersionCard';
 import styles from './SettingsTab.module.scss';
 
 /**
@@ -194,6 +195,8 @@ export const SettingsTab: FC = () => {
           </button>
         </div>
       </Card>
+
+      <ResourceVersionCard />
     </div>
   );
 };

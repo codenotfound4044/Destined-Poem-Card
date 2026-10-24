@@ -20,6 +20,7 @@ description: 修改工作台（tools/workbench/），或者改了开局数据、
 | 角色卡脚本或正则数量、推送覆盖范围 | `tools/sync/receiver.mjs`、`server.mjs` 的数量检查，`ui/sync.js` 推送页的「会被覆盖 / 会保留」说明 |
 | 状态栏主题 `theme-presets.ts` 的写法（`const XTheme: Theme = {...}`、颜色键） | `tools/workbench/themes.mjs`、`ui/theme-view.js` 的分组和中文名 |
 | 版本号、卡名、世界书名规则 | `tools/lib/version.mjs`、`tools/release.mjs`、`ui/release.js` |
+| 程序资源版本、CDN 域名、加载器（`release.json` 的 `assets`） | `tools/lib/resource-loader.mjs`、`tools/assets.mjs`、`tools/sync/server.mjs` 的 CDN 核对、`ui/sync.js` 的资源来源选项；状态栏设置页 `packages/frontend/src/apps/status/pages/settings/ResourceVersionCard.tsx` |
 
 ## 验证
 

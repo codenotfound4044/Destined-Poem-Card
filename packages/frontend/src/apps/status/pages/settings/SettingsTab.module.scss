@@ -213,3 +213,48 @@
 .btnSecondary {
   @include button-secondary;
 }
+
+// 脚本版本
+.versionList {
+  @include list-container;
+  margin-top: $spacing-sm;
+}
+
+.versionRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $spacing-md;
+  padding: $spacing-sm $spacing-md;
+  @include bg-overlay-medium;
+  border: 1px solid var(--theme-card-border);
+  border-radius: $border-radius-sm;
+}
+
+.versionInfo {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.versionName {
+  color: var(--theme-text-primary);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.versionInput {
+  flex: none;
+  width: 96px;
+  min-height: 28px;
+  padding: 2px 6px;
+  border: 1px solid var(--theme-card-border);
+  border-radius: $border-radius-sm;
+  background: var(--theme-card-bg);
+  color: var(--theme-text-primary);
+  font-size: 12px;
+}
+
+.versionInputInvalid {
+  border-color: var(--theme-error);
+}
