@@ -75,6 +75,6 @@ pnpm verify
 
 推送到酒馆可在工作台中操作，也可用 `pnpm card sync`。在酒馆助手安装一次全局桥接脚本后，可选择已连接的酒馆与目标角色，检查或构建后覆盖同步；首次使用见 [同步到测试酒馆](docs/sync.md)。参考源更新与每周检查 PR 见 [知识源](docs/references.md)，第三方依赖更新见 [依赖维护](docs/dependencies.md)。
 
-进一步说明：[架构与状态边界](docs/architecture.md)、[角色卡契约](docs/contracts.md)、[修改与验证](docs/workflow.md)、[版本、封面与发布](docs/versioning.md)、[地理数据](docs/geography.md)、[世界书树状条目](docs/worldbook-tree.md)、[来源](docs/sources.md)。AI 助手使用的技能在 `.agents/skills/`。
+进一步说明：[架构与状态边界](docs/architecture.md)、[角色卡契约](docs/contracts.md)、[修改与验证](docs/workflow.md)、[版本、封面与发布](docs/versioning.md)、[地理数据](docs/geography.md)、[世界书树状条目](docs/worldbook-tree.md)、[事件链与事件信号](docs/event-chain.md)、[来源](docs/sources.md)。AI 助手使用的技能在 `.agents/skills/`。
 
 想参与修改或提 PR，请看 [CONTRIBUTING.md](CONTRIBUTING.md)。仓库使用与二创授权见 [LICENSE](LICENSE)。
