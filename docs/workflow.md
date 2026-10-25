@@ -12,6 +12,10 @@
 
 检查按改动范围选，不必每次全跑：只改世界书正文或内容数据时跑 `pnpm card check`；改代码时跑相应包的测试和类型检查；改动构建、共享 Schema，或准备推送、发布时才跑 `pnpm verify`。酒馆内实测只在改宿主集成或界面时做，且只测改到的部分。不为日常改动单独写验收报告。verify 汇总九项：测试、类型、Vue、EJS、卡片输入、参考资料、local 构建、release 构建和产物校验；日志位于 `.cache/verification/*.log`，机器可读记录为 `.cache/verification/static.json`。依赖安装由 setup 单独完成，忽略的参考缓存先用 `pnpm refs restore` 恢复。不要把生成文件中的补丁当作源码修复。
 
+GitHub 的「Workspace verification」在推送 `main`、更新 PR 或手动运行时执行；普通开发分支和标签推送不再单独触发。同一 PR 或分支有新验证时，取消尚未完成的旧验证，只保留最新一次。资源发布和两项定时维护工作流不受影响。
+
+自动验证会跳过纯说明文档改动：`docs/` 下的 Markdown，以及根目录的 `README.md`、`CONTRIBUTING.md`、`CHANGELOG.md`、`AGENTS.md`、`LICENSE`。推送或 PR 的改动中只要还包含其他文件，就照常完整验证；世界书、内容数据、`release.json` 和工作流配置均不在跳过范围。手动运行和本地 `pnpm verify` 始终保留完整检查。
+
 通过 `pnpm dev`（或工作台启动器）提供本机资源与工作台，在测试酒馆安装全局连接脚本后，先运行 `pnpm card sync --dry-run`，再运行 `pnpm card sync` 构建并覆盖推送。也可在工作台执行相同操作；目标选择、覆盖范围和恢复见 [推送到酒馆](sync.md)。汇报结果时分别说明：源码/静态检查、构建、酒馆内界面与脚本、模型真实生成；没有执行的层级明确写未验证。
 
 版本号、更新记录和发版命令见 [版本、封面与发布](versioning.md)。发布配置与发布动作分开处理。`release` 构建只生成固定 CDN 目标引用；创建仓库、提交、tag、推送和上传产物需要开发组明确同意。

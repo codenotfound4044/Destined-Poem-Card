@@ -3,7 +3,27 @@ name: Workspace verification
 on:
   workflow_dispatch:
   push:
+    branches:
+      - main
+    paths-ignore:
+      - "docs/**/*.md"
+      - "README.md"
+      - "CONTRIBUTING.md"
+      - "CHANGELOG.md"
+      - "AGENTS.md"
+      - "LICENSE"
   pull_request:
+    paths-ignore:
+      - "docs/**/*.md"
+      - "README.md"
+      - "CONTRIBUTING.md"
+      - "CHANGELOG.md"
+      - "AGENTS.md"
+      - "LICENSE"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   verify:
