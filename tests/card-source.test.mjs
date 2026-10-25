@@ -231,9 +231,9 @@ test("PNG export carries matching V2 and V3 data and replaces previous card chun
 
 test("official worldbook manifest resolves every entry without enabling unregistered files", async () => {
   const { entries, references } = await loadWorldbook();
-  assert.equal(entries.length, 556);
-  assert.equal(entries.filter((e) => e.启用).length, 434);
-  assert.equal(references.length, 556);
+  assert.equal(entries.length, 557);
+  assert.equal(entries.filter((e) => e.启用).length, 435);
+  assert.equal(references.length, 557);
   assert.ok(references.some((r) => r.file.endsWith("variables.ejs")));
 });
 
