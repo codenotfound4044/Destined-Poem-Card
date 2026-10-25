@@ -6,3 +6,12 @@ allowBuilds:
   unrs-resolver: true
   vue-demi: true
   javascript-obfuscator: true
+# 安全修复：把有已知漏洞的间接依赖抬到同一大版本内的修复版（nanoid 4 没有修复版，改用 5）。
+overrides:
+  "@xmldom/xmldom@0.8": "^0.8.15"
+  "brace-expansion@5": "^5.0.12"
+  "css-what@5": "^5.0.1"
+  "fast-uri@3": "^3.1.9"
+  "nanoid@4": "^5.1.16"
+  "nth-check@2": "^2.1.1"
+  "zod@4": "^4.6.7"
