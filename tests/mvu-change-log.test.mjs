@@ -8,8 +8,8 @@ import YAML from 'yaml';
 const root = new URL('../worldbook/命定之诗/变量/', import.meta.url);
 const source = async name => fs.readFile(new URL(name, root), 'utf8');
 const shared = {};
-for (const name of ['公共时间函数.ejs', '公共可见变量.ejs']) {
-  const text = await source(name);
+{
+  const text = await source('公共函数.ejs');
   // ST-Prompt-Template removes decorators before evaluating special entries.
   await ejs.render(text.replace(/^@@[^\n]*\n/gm, ''), { _, define: (key, value) => { shared[key] = value; } }, { async: true });
 }

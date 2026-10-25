@@ -17,7 +17,7 @@
 
 ## 其他条目复用时间解析
 
-`worldbook/命定之诗/变量/公共时间函数.ejs` 注册公共函数 `destinyParseTime(value)`。蓝灯条目名称是 `[本体][变量]公共时间函数`，正文首行的 `@@generate_before` 让它在生成前执行；只注册函数，不输出提示词，也不读写游戏变量。公共可见变量条目采用同样的正文装饰器，注册展示与日志共用的 `destinyVisibleState(value)`。使用日志或下列调用的条目时，需保持这两个公共条目和 ST-Prompt-Template 的内容注入功能启用。
+`worldbook/命定之诗/变量/公共函数.ejs` 集中注册 `destinyParseTime(value)` 和展示与日志共用的 `destinyVisibleState(value)`，后续公共函数也放在此处。蓝灯条目名称是 `[本体][变量]公共函数`，正文首行的 `@@generate_before` 让它在生成前执行；只注册函数，不输出提示词，也不读写游戏变量。使用日志或下列调用的条目时，需保持这个公共条目和 ST-Prompt-Template 的内容注入功能启用。
 
 ```ejs
 <%_ {
