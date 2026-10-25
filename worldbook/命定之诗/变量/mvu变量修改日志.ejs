@@ -1,0 +1,156 @@
+<%_ {
+  // 只读楼层快照，在构建提示词时计算净变化；不保存日志，不重新解析 Schema。
+  const chat = SillyTavern.chat;
+  const isObject = value => value !== null && typeof value === 'object' && !Array.isArray(value);
+  const isAssistant = message => !message.is_user && !message.is_system;
+  const readState = id => getMessageVar('stat_data', { withMsg: { id }, defaults: null });
+  const lowerBound = Math.max(0, chat.length - 20);
+  let end = chat.length - 1;
+  // regenerate 的目标回复已被宿主删除；其他原地生成需排除仍在聊天里的目标助手楼。
+  const inPlace = ['swipe', 'continue', 'append', 'appendFinal'].includes(generateType);
+  if (inPlace) {
+    for (let id = end; id >= lowerBound; id--) {
+      if (isAssistant(chat[id])) {
+        end = id - 1;
+        break;
+      }
+    }
+  }
+  const findState = start => {
+    for (let id = start; id >= lowerBound; id--) {
+      if (chat[id].is_system) continue;
+      const state = readState(id);
+      if (isObject(state)) return { id, state };
+    }
+    return null;
+  };
+  const current = findState(end);
+  // 普通交替聊天：当前用户楼与上个用户楼比较；不假定固定相隔两楼。
+  let previous = null;
+  for (let id = current ? current.id : -1; id >= lowerBound; id--) {
+    if (isAssistant(chat[id])) {
+      previous = findState(id - 1);
+      break;
+    }
+  }
+  const currentVisible = current ? destinyVisibleState(current.state) : null;
+  const previousVisible = previous ? destinyVisibleState(previous.state) : null;
+  // 当前仍存在但已不可见的节点不能借“移除”记录重新泄露；真正删除的节点仍报告。
+  const pruneNewlyHidden = (before, raw, visible) => {
+    if (!isObject(before) || !isObject(raw) || !isObject(visible)) return;
+    for (const key of Object.keys(before)) {
+      if (Object.hasOwn(raw, key) && !Object.hasOwn(visible, key)) delete before[key];
+      else pruneNewlyHidden(before[key], raw[key], visible[key]);
+    }
+  };
+  if (previous && current) pruneNewlyHidden(previousVisible, current.state, currentVisible);
+  const timeLines = [];
+  if (current) {
+    const value = currentVisible.世界?.时间;
+    const parsed = destinyParseTime(value);
+    if (parsed.error) {
+      timeLines.push(`时间解析失败：${parsed.error}；当前值：${JSON.stringify(value) ?? '缺失'}。`);
+      timeLines.push('请在下一轮MVU更新中修正 /世界/时间，使用24小时制；依据已确认剧情，不得猜测日期或为修正格式额外推进时间。');
+    } else if (previous) {
+      const oldValue = previousVisible.世界?.时间;
+      const oldParsed = destinyParseTime(oldValue);
+      if (oldParsed.error) timeLines.push(`时间：当前值解析成功；比较基线解析失败（${oldParsed.error}），未计算时间差。`);
+      else if (oldParsed.era !== parsed.era) timeLines.push(`时间：${JSON.stringify(oldValue)} → ${JSON.stringify(value)}。`);
+      else {
+        const delta = parsed.minutes - oldParsed.minutes;
+        if (delta) {
+          let remaining = Math.abs(delta);
+          const parts = [];
+          for (const [unit, size] of [['天', 1440], ['小时', 60], ['分钟', 1]]) {
+            const amount = Math.floor(remaining / size);
+            if (amount) parts.push(`${amount}${unit}`);
+            remaining %= size;
+          }
+          timeLines.push(`时间：${delta > 0 ? '推进' : '回退'}${parts.join('')}。`);
+        } else if (value !== oldValue) timeLines.push('时间：格式变更，时点未变。');
+      }
+    } else timeLines.push('时间：解析成功；无比较基线，未计算时间差。');
+  }
+  const groups = new Map();
+  const add = (group, field, action) => {
+    if (!groups.has(group)) groups.set(group, []);
+    groups.get(group).push({ field, action });
+  };
+  const quote = value => JSON.stringify(value);
+  // 路径始终用数组传递；仅显示时拼接，特殊名称不会与字段层级混淆。
+  const displayKey = key => /^[\p{L}_$][\p{L}\p{N}_$]*$/u.test(key) ? key : `[${quote(key)}]`;
+  const displayPath = path => path.reduce((text, key) => {
+    const part = displayKey(key);
+    return text + (text && !part.startsWith('[') ? '.' : '') + part;
+  }, '');
+  const stringArray = value => Array.isArray(value) && value.every(item => typeof item === 'string');
+  const same = (a, b) => {
+    if (a === b) return true;
+    if (Array.isArray(a) && Array.isArray(b)) return a.length === b.length && a.every((item, index) => same(item, b[index]));
+    if (isObject(a) && isObject(b)) {
+      const keys = Object.keys(a);
+      return keys.length === Object.keys(b).length && keys.every(key => Object.hasOwn(b, key) && same(a[key], b[key]));
+    }
+    return false;
+  };
+  const kind = value => value === null ? 'null' : Array.isArray(value) ? '数组' : ({ string: '字符串', number: '数字', boolean: '布尔', object: '对象' }[typeof value] || typeof value);
+  const walk = (before, after, hasBefore, hasAfter, path) => {
+    const group = displayPath(path.slice(0, -1)) || 'stat_data';
+    const field = path.length ? displayKey(path[path.length - 1]) : '';
+    // 父节点整体新增/删除后短路，不展开初始化字段或逐字段删除。
+    if (!hasBefore || !hasAfter) {
+      add(group, field, hasAfter ? '新增' : '移除');
+      return;
+    }
+    if (same(before, after)) return;
+    if (typeof before === 'number' && typeof after === 'number' && Number.isFinite(before) && Number.isFinite(after)) {
+      const delta = after - before;
+      add(group, field, `${delta > 0 ? '+' : ''}${Number(delta.toPrecision(15))}`);
+    } else if (typeof before === 'string' && typeof after === 'string') {
+      add(group, field, before === '' ? '填写' : after === '' ? '清空' : '更新');
+    } else if (typeof before === 'boolean' && typeof after === 'boolean') {
+      add(group, field, `=${after}`);
+    } else if (stringArray(before) && stringArray(after)) {
+      const added = after.filter(item => !before.includes(item));
+      const removed = before.filter(item => !after.includes(item));
+      if (added.length) add(group, field, `新增${quote(added)}`);
+      if (removed.length) add(group, field, `移除${quote(removed)}`);
+      if (!added.length && !removed.length) add(group, field, '顺序或重复项调整');
+    } else if (Array.isArray(before) && Array.isArray(after)) {
+      add(group, field, '更新');
+    } else if (isObject(before) && isObject(after)) {
+      for (const key of new Set([...Object.keys(before), ...Object.keys(after)])) {
+        if (key === '_隐藏' || (path.length === 1 && path[0] === '世界' && key === '时间')) continue;
+        walk(before[key], after[key], Object.hasOwn(before, key), Object.hasOwn(after, key), [...path, key]);
+      }
+    } else if (typeof after === 'string' && after === 'MAX') {
+      add(group, field, '变为MAX');
+    } else {
+      add(group, field, kind(before) === kind(after) ? '更新' : `类型变更（${kind(before)}→${kind(after)}）`);
+    }
+  };
+  if (current && previous) walk(previousVisible, currentVisible, true, true, []);
+  const lines = [...timeLines];
+  for (const [group, changes] of groups) {
+    const compact = [];
+    const merged = new Map();
+    for (const { field, action } of changes) {
+      if (field && ['更新', '填写', '清空'].includes(action)) {
+        if (!merged.has(action)) {
+          const record = { fields: [], action };
+          merged.set(action, record);
+          compact.push(record);
+        }
+        merged.get(action).fields.push(field);
+      } else compact.push({ fields: field ? [field] : [], action });
+    }
+    lines.push(`${group}：${compact.map(({ fields, action }) => `${fields.join('、')}${action}`).join('；')}。`);
+  }
+  if (lines.length) {
+_%>
+<mvu变量上一轮次修改日志>
+上轮净变化已生效，勿重复执行；此处仅记录变动信息。
+<%- lines.join('\n').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') %>
+</mvu变量上一轮次修改日志>
+<%_ }
+} _%>

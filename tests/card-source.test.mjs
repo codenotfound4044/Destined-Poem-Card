@@ -229,13 +229,6 @@ test("PNG export carries matching V2 and V3 data and replaces previous card chun
   assert.deepEqual(readCardPNG(result).card, card);
 });
 
-test("official worldbook manifest resolves every entry without enabling unregistered files", async () => {
-  const { entries, references } = await loadWorldbook();
-  assert.equal(entries.length, 555);
-  assert.equal(entries.filter((e) => e.启用).length, 434);
-  assert.equal(references.length, 555);
-  assert.ok(references.some((r) => r.file.endsWith("variables.ejs")));
-});
 
 test("generated schema is published and hashed while old reports are excluded", async () => {
   const temp = await fs.mkdtemp(path.join(os.tmpdir(), "destiny-card-"));

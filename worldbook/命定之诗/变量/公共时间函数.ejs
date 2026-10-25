@@ -1,0 +1,24 @@
+@@generate_before
+<%_ {
+  // 纯时间解析：不读写变量；UTC 只用于日历计算，不改变纪元或游戏时间。
+  define('destinyParseTime', function (value) {
+    if (typeof value !== 'string' || !value.trim()) return { error: '时间为空或不是字符串' };
+    const match = value.match(/^([^\s\d-]+纪元)(\d+)年-(\d{1,2})月-(\d{1,2})日-星期[一二三四五六日天]-(\d{2}):(\d{2})$/);
+    if (!match) return { error: '格式必须符合变量更新规则：某某纪元488年-3月-15日-星期一-14:00；星期必填，时分均为两位数字，不接受季节、命名月份或时段前缀' };
+    const [, era, yearText, monthText, dayText, hourText, minuteText] = match;
+    const year = Number(yearText), month = Number(monthText), day = Number(dayText);
+    const hour = Number(hourText), minute = Number(minuteText);
+    if (!Number.isSafeInteger(year) || year < 1) return { error: '年份必须是正整数' };
+    if (month < 1 || month > 12) return { error: `月份${month}非法，应为1–12` };
+    if (hour > 23 || minute > 59) return { error: `时分${hourText}:${minuteText}非法；小时应为0–23，分钟应为0–59` };
+    const leap = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+    const days = month === 2 ? (leap ? 29 : 28) : [4, 6, 9, 11].includes(month) ? 30 : 31;
+    if (day < 1 || day > days) return { error: `${year}年${month}月的日期${day}非法，应为1–${days}` };
+    // setUTCFullYear 避免 Date.UTC 把1–99年自动解释为1901–1999年。
+    const date = new Date(0);
+    date.setUTCFullYear(year, month - 1, day);
+    date.setUTCHours(hour, minute, 0, 0);
+    if (!Number.isFinite(date.getTime())) return { error: '日期超出可计算范围' };
+    return { era, minutes: date.getTime() / 60000 };
+  });
+} _%>
