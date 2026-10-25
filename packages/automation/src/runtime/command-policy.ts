@@ -1,5 +1,10 @@
 /**
- * MVU 命令过滤：`事件.信号` 只能追加。
+ * MVU 命令保护：按变量里的声明式规则过滤 `COMMAND_PARSED` 收到的命令。
+ *
+ * 规则在每次事件里重新读取（`loadCommandPolicies`），所以改完变量下一条消息就生效：
+ * - 角色卡变量 `命令保护.规则` 是默认规则
+ * - 聊天变量 `命令保护.规则` 里同路径的规则覆盖角色卡
+ * - 两者都没有时使用 {@link DEFAULT_COMMAND_POLICIES}
  *
  * COMMAND_PARSED 收到的路径有多种写法，按分段比较而不是按整串比较：
  * - JSON Patch：`["事件"]["信号"]`，不带 stat_data（MVU 0.196.0 的 extractJsonPatch）
@@ -12,8 +17,12 @@
  * - remove /a/b/0     -> delete ['["a"]["b"]["0"]']
  * - move from -> to   -> move   [from, to]
  */
-
-const PROTECTED_PATHS: readonly (readonly string[])[] = [['事件', '信号']];
+import {
+  CommandPolicy,
+  DEFAULT_COMMAND_POLICIES,
+  POLICY_VARIABLE_KEY,
+  PolicyOperation,
+} from './command-policy.config';
 
 /** 去掉首尾引号与反斜杠，与 MVU 的 trimQuotesAndBackslashes 一致。 */
 const trimLiteral = (value: string): string => value.replace(/^[\\"'` ]*(.*?)[\\"'` ]*$/, '$1');
@@ -47,43 +56,139 @@ const mergeTouches = (
   return _.has(value, protectedPath.slice(target.length));
 };
 
-const violates = (command: Mvu.CommandInfo, protectedPath: readonly string[]): boolean => {
-  const args = command.args as string[];
-  /** 目标是受保护字段本身、它内部、或包含它的上级（只算 事件 这一级，不含根）。 */
-  const covers = (target: string[]) =>
-    startsWith(target, protectedPath) || (target.length > 0 && startsWith(protectedPath, target));
+const OPERATIONS: readonly PolicyOperation[] = ['write', 'append', 'insert', 'remove', 'move'];
 
+const isOperation = (value: unknown): value is PolicyOperation =>
+  typeof value === 'string' && (OPERATIONS as readonly string[]).includes(value);
+
+const parsePolicy = (path: string, raw: unknown): CommandPolicy | undefined => {
+  if (!_.isPlainObject(raw)) return undefined;
+  const segments = toSegments(path);
+  if (segments.length === 0) return undefined;
+  const rule = raw as Record<string, unknown>;
+  return {
+    path: segments,
+    allow: Array.isArray(rule['允许']) ? rule['允许'].filter(isOperation) : [],
+    protectAncestors: rule['保护父级'] === true,
+    blockMerge: rule['阻止合并'] === true,
+  };
+};
+
+/** 从一个变量作用域里读出规则；结构不对的条目会被忽略。 */
+export const readCommandPolicies = (variables: unknown): CommandPolicy[] => {
+  if (!_.isPlainObject(variables)) return [];
+  const scope = variables as Record<string, unknown>;
+  const config = scope[POLICY_VARIABLE_KEY];
+  if (!_.isPlainObject(config)) return [];
+  const rules = (config as Record<string, unknown>)['规则'];
+  if (!_.isPlainObject(rules)) return [];
+  return Object.entries(rules as Record<string, unknown>).flatMap(([path, raw]) => {
+    const policy = parsePolicy(path, raw);
+    return policy ? [policy] : [];
+  });
+};
+
+const readScopePolicies = (type: 'character' | 'chat'): CommandPolicy[] => {
+  // jest 等没有酒馆助手的运行环境里没有这个全局函数
+  if (typeof getVariables !== 'function') return [];
+  try {
+    return readCommandPolicies(getVariables({ type }));
+  } catch {
+    // 没有打开角色卡时 getVariables({ type: 'character' }) 会抛错
+    return [];
+  }
+};
+
+/** 读取当前生效的规则：内置默认 -> 角色卡 -> 聊天，后者覆盖前者。 */
+export const loadCommandPolicies = (): readonly CommandPolicy[] => {
+  const policies: Record<string, CommandPolicy> = {};
+  for (const policy of [
+    ...DEFAULT_COMMAND_POLICIES,
+    ...readScopePolicies('character'),
+    ...readScopePolicies('chat'),
+  ]) {
+    policies[JSON.stringify(policy.path)] = policy;
+  }
+  return Object.values(policies);
+};
+
+interface CommandTarget {
+  operation: PolicyOperation;
+  target: string[];
+}
+
+/** 把命令还原成「对哪个字段做了什么操作」。 */
+const readTargets = (command: Mvu.CommandInfo): CommandTarget[] => {
+  const args = command.args as string[];
   switch (command.type) {
     case 'insert': {
       const parent = toSegments(args[0]);
       if (args.length === 2) {
-        // 追加到数组末尾，或把对象合并进 parent
-        if (_.isEqual(parent, protectedPath)) return false;
-        if (startsWith(parent, protectedPath)) return true;
-        return startsWith(protectedPath, parent) && mergeTouches(parent, args[1], protectedPath);
+        // 往数组追加，或把对象合并进 parent
+        return [{ operation: 'append', target: parent }];
       }
-      // 在指定键或索引处插入：往信号数组里插入新元素只增不删，放行
-      if (_.isEqual(parent, protectedPath)) return false;
-      return covers([...parent, trimLiteral(args[1])]);
+      // 三参 insert：`-` 是追加到末尾，数字是按下标插入，其余是写对象键
+      const key = trimLiteral(args[1]);
+      const operation: PolicyOperation =
+        key === '-' ? 'append' : /^-?\d+$/.test(key) ? 'insert' : 'write';
+      return [{ operation, target: [...parent, key] }];
     }
     case 'delete': {
       const target = toSegments(args[0]);
       // 两个参数时第二个是键、索引或要删除的值
-      return covers(args.length === 2 ? [...target, trimLiteral(args[1])] : target);
+      return [
+        {
+          operation: 'remove',
+          target: args.length === 2 ? [...target, trimLiteral(args[1])] : target,
+        },
+      ];
     }
     case 'move':
-      return args.some(path => covers(toSegments(path)));
+      return args.map(path => ({ operation: 'move' as const, target: toSegments(path) }));
     case 'set':
     case 'add':
     default:
-      return covers(toSegments(args[0]));
+      return [{ operation: 'write', target: toSegments(args[0]) }];
   }
 };
 
-export const shouldExcludeCommand = (command: Mvu.CommandInfo): boolean =>
-  PROTECTED_PATHS.some(protectedPath => violates(command, protectedPath));
+const violates = (command: Mvu.CommandInfo, policy: CommandPolicy): boolean => {
+  const path = policy.path;
+
+  for (const { operation, target } of readTargets(command)) {
+    if (startsWith(target, path)) {
+      // 直接作用于受保护字段或其内部：只放行白名单里的操作
+      if (!policy.allow.includes(operation)) return true;
+      continue;
+    }
+    // 作用于上级字段：整体覆盖、删除、移动父级都要拦；合并交给下面的 blockMerge 判断
+    if (
+      policy.protectAncestors &&
+      target.length > 0 &&
+      startsWith(path, target) &&
+      operation !== 'append'
+    ) {
+      return true;
+    }
+  }
+
+  // 二参 insert 是把值合并进 parent：只拦值里带受保护字段的合并
+  if (policy.blockMerge && command.type === 'insert' && command.args.length === 2) {
+    const parent = toSegments(command.args[0] as string);
+    const isStrictAncestor = !startsWith(parent, path) && startsWith(path, parent);
+    if (isStrictAncestor && mergeTouches(parent, command.args[1] as string, path)) return true;
+  }
+
+  return false;
+};
+
+export const shouldExcludeCommand = (
+  command: Mvu.CommandInfo,
+  policies: readonly CommandPolicy[] = loadCommandPolicies()
+): boolean => policies.some(policy => violates(command, policy));
 
 export const handleCommandParsed = (_variables: Mvu.MvuData, commands: Mvu.CommandInfo[]): void => {
-  const retainedCommands = commands.filter(command => !shouldExcludeCommand(command));
+  const policies = loadCommandPolicies();
+  const retainedCommands = commands.filter(command => !shouldExcludeCommand(command, policies));
   commands.splice(0, commands.length, ...retainedCommands);
 };
