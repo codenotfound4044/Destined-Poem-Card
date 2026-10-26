@@ -309,6 +309,7 @@ variables_update_rules:
         range: -100~100
         check:
           - 变化区间为-5~5
+          - 初始好感度范围±20
           - 具体变动幅度与阈值规则参考"好感度定义"
       心里话:
         check:
