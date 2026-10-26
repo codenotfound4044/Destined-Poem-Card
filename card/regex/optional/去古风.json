@@ -814,5 +814,22 @@
     "maxDepth": null,
     "markdownOnly": true,
     "promptOnly": true
+  },
+  {
+    "id": "ac0ff451-daa0-4c2b-b965-269e050ef4e2",
+    "scriptName": "[去古风]官道→主干道",
+    "disabled": true,
+    "runOnEdit": false,
+    "findRegex": "/(?<![长军法警宦文武副士考判教令察挥交记政守神女侍将需安行航主百众高清贪狗当做])官道/g",
+    "trimStrings": [],
+    "replaceString": "主干道",
+    "placement": [
+      2
+    ],
+    "substituteRegex": 0,
+    "minDepth": null,
+    "maxDepth": null,
+    "markdownOnly": true,
+    "promptOnly": true
   }
 ]

@@ -1791,10 +1791,10 @@ edges:
         terrain:
           - 平原
         direction: 东-西
-        description: 帝国内部官道
+        description: 帝国内部主干道
         notes: ''
     importance: 1
-    notes: 帝国内部官道
+    notes: 帝国内部主干道
   - id: aesgard__silver_creek_town
     from: aesgard
     to: silver_creek_town

@@ -64,6 +64,7 @@ const SAMPLES = [
   ["[去古风]青丝→长发", "一头青丝", "一头长发"],
   ["[去古风]衣袂→衣摆", "衣袂飘飘", "衣摆飘飘"],
   ["[去古风]方才→刚才", "方才那人", "才能出众"],
+  ["[去古风]官道→主干道", "沿着官道一路向东", "那名军官道：“站住。”"],
 ];
 
 test("optional [去古风] regex set is importable, default-off and stays out of the card", async () => {
