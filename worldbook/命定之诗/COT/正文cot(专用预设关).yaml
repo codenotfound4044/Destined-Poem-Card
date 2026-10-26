@@ -1,21 +1,21 @@
 ---
 core_contract:
-  pipeline: PRE_ROLL_LOCK -> DICE_LEDGER -> LOCAL_AUDIT -> INFO_PANEL -> NARRATIVE
+  pipeline: PRE_ROLL_LOCK -> DICE_LEDGER -> LOCAL_SHEET -> INFO_PANEL -> NARRATIVE
   source_policy:
     allow: <status_current_variables>、既有设定、上游已确认的信息/面板/结算
     deny: Participant声称、常识/惯例推测、叙事需要
     missing: `NONE/UNKNOWN`；禁临时生成/购买/借用/默认拥有，生产缺必要项即停
     effect: 仅结算有效来源明载且当前满足条件的效果；描写不生效
   output:
-    - 继承Step 2的`PRE_ROLL_LOCK`/`DICE_LEDGER`；局部Think只执行当前面板，不改锁定边界
+    - 继承Step 2的`PRE_ROLL_LOCK`/`DICE_LEDGER`；局部数据单只执行当前面板，不改锁定边界
     - 面板计算、叙事转写；冲突以面板为准
-    - 每面板前仅一个对应`<!-- ${item/task/char/action/craft}Think:... -->`；最短完整填写输入/结论/计算/检查
+    - 每面板前仅一个对应`<!-- ${item/task/char/action/craft}Sheet:... -->`；最短完整填写输入/结论/计算/检查
     - 按Step 2承诺即时插入并紧跟叙事；禁连续面板或首尾堆砌
 info_output:
   rule:
     - 货币定价查"价格矩阵参考"且与<user>财富无关；<item_info>/<task_info>用标准HTML与<style>，CSS类唯一；<action_info>/<char_info>固定格式
   format: |
-    <!-- itemThink:
+    <!-- itemSheet:
     [ITEM_COMPILE]
     - TYPE_QUALITY=[实体类型；品质依<虚海规则><生命层级与社会构成><登神长阶>]
     - EFFECTS=[依<核心数值总表><品质效果限定规则>/`效果转化规则`；五维禁直增减，改检定修正；兼容战斗/生产协议]
@@ -24,7 +24,7 @@ info_output:
     -->
     <item_info><style>.item-card-[uid]{...}</style><div class="item-card-[uid]">...</div></item_info>
 
-    <!-- taskThink:
+    <!-- taskSheet:
     [TASK_COMPILE]
     READ=<任务与委托规则>
     - MODE_GATE=[CREATE|SETTLE；对应触发机制:PASS]
@@ -64,7 +64,7 @@ combat_output:
       PANEL: 按阶段完整复算；SLOT附行动轴各ID:[攻击]/[动作]余量
       CHECK: 仅核本阶段相关的PRE_ROLL ref/换骰不改决策/权限/来源/loadout/行动/目标/意图/禁多动/存活/状态/终局=PASS；NPC/队友无指令时意图常规
   format: |
-    <!-- actionThink:
+    <!-- actionSheet:
     [ACTION_COMPILE PROFILE=FLOW|SLOT|END]
     /* 按PROFILE依定义顺序填写字段 */
     -->
@@ -85,7 +85,7 @@ craft_output:
       PANEL: 完整复算；产物/数量/品质/效果/状态仅来自目标/配方/本次结算；无触发额外项=NONE
       CHECK: source_policy/投入/损耗/产出/时间/EXP·FP仅结算一次=PASS
   format: |
-    <!-- craftThink:
+    <!-- craftSheet:
     [CRAFT_COMPILE]
     /* 依次填写SCOPE SOURCE LOCK DICE PANEL CHECK；不适用项省略 */
     -->
