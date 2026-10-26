@@ -49,7 +49,7 @@ const emit = defineEmits<{
         :title="
           canRollPoints
             ? '随机生成新的转生点数'
-            : '已消耗点数（天赋除外），无法重新 Roll（请先重置）'
+            : '已消耗点数，无法重新 Roll（请先重置；天赋可选回「未选择」）'
         "
         @click="rollPoints"
       >

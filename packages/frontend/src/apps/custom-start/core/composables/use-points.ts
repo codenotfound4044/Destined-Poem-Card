@@ -28,11 +28,9 @@ export function usePoints(): UsePointsReturn {
     return character.value.reincarnationPoints - consumed;
   });
 
-  // 判断是否可以 Roll 点数：除天赋外没有消耗点数时才允许。
-  // 天赋必选且不能取消，计入的话选过天赋就再也无法 Roll。
+  // 判断是否可以 Roll 点数（只有在没有消耗点数时才允许；天赋可以选回「未选择」退还消耗）
   const canRollPoints = computed(() => {
-    const talentCost = characterStore.selectedTalent?.cost ?? 0;
-    return characterStore.consumedPoints - talentCost === 0;
+    return characterStore.consumedPoints === 0;
   });
 
   // Roll 转生点数

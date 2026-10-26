@@ -41,10 +41,14 @@ const startLocationsCascader = getStartLocationsCascader;
 
 const raceOptions = computed(() => Object.keys(raceCosts.value));
 const identityOptions = computed(() => Object.keys(identityCosts.value));
-const talentOptions = TALENT_LEVELS.map(talent => ({
-  value: talent.name,
-  label: `${talent.name} · ${talent.points} 属性点（消耗 ${talent.cost} 转生点）`,
-}));
+// 「未选择」可以选回，退还天赋消耗的转生点（Roll 点数要求没有任何消耗）
+const talentOptions = [
+  { value: '', label: '未选择（不消耗转生点）' },
+  ...TALENT_LEVELS.map(talent => ({
+    value: talent.name,
+    label: `${talent.name} · ${talent.points} 属性点（消耗 ${talent.cost} 转生点）`,
+  })),
+];
 
 // 计算当前等级的层级属性加成
 const tierAttributeBonus = computed(() => getTierAttributeBonus(character.value.level));
@@ -200,17 +204,15 @@ const displayStartLocation = computed(() => {
       <!-- 属性分配面板 -->
       <div class="form-field">
         <FormLabel :label="`${character.name || '{{user}}'} 天赋水平`" required />
-        <FormSelect
-          v-model="character.talentLevel"
-          :options="talentOptions"
-          placeholder="请先选择天赋水平"
-        />
+        <FormSelect v-model="character.talentLevel" :options="talentOptions" placeholder="" />
         <p class="field-hint">
-          天赋决定可分配的基础属性点；降低档位后若已超额，将清空基础点重新分配。
+          天赋决定可分配的基础属性点，必须选择才能进入下一步；降低档位后若已超额，将清空基础点重新分配。想重新
+          Roll 转生点时，可以先选回「未选择」退还天赋消耗。
         </p>
       </div>
+      <!-- 天赋选回「未选择」时额外点不清空，仍有额外点就继续显示面板，免得消耗看不见 -->
       <div
-        v-if="characterStore.selectedTalent"
+        v-if="characterStore.selectedTalent || characterStore.usedAP > 0"
         class="attributes-panel"
         :class="{ 'has-extra-points': hasAttributePoints }"
       >
