@@ -6,9 +6,9 @@
   "localOrigin": "http://127.0.0.1:5173",
   "published": false,
   "assets": {
-    "version": "1.0.2",
+    "version": "1.0.3",
     "tagPrefix": "assets-v",
-    "published": true,
+    "published": false,
     "roots": [
       "https://cdn.poem-of-destiny.com/assets/{version}"
     ],
