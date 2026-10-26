@@ -10,15 +10,22 @@
 
 保留锁定版本，等待宿主兼容性审查。
 
-[上游差异](https://github.com/N0VI028/JS-Slash-Runner/compare/1292dbfa0f16943f70d55cfdf3bb5a0ce690ef8b...cee1fb4503679efeaba0def4d42d19eaf87bd29c)：`1292dbfa0f16943f70d55cfdf3bb5a0ce690ef8b` → `cee1fb4503679efeaba0def4d42d19eaf87bd29c`。
+[上游差异](https://github.com/N0VI028/JS-Slash-Runner/compare/1292dbfa0f16943f70d55cfdf3bb5a0ce690ef8b...0af421068e7c03b6b0a71b68feb79d201164edeb)：`1292dbfa0f16943f70d55cfdf3bb5a0ce690ef8b` → `0af421068e7c03b6b0a71b68feb79d201164edeb`。
 
+- 新增：`@types/function/file.d.ts`
+- 修改：`@types/function/index.d.ts`
 - 修改：`package.json`
 
 ## tavern-helper-docs
 
 策略：`host-bound`；跟踪：`main`。
 
-所选资料文件无变化。锁定提交：`08c81a21147498ce0de6f18cbfffc28a364ca27c`。
+保留锁定版本，等待宿主兼容性审查。
+
+[上游差异](https://github.com/N0VI028/JS-Slash-Runner-Doc/compare/08c81a21147498ce0de6f18cbfffc28a364ca27c...b3ee3c7ef5630f613a4260f4f1295605ee06f960)：`08c81a21147498ce0de6f18cbfffc28a364ca27c` → `b3ee3c7ef5630f613a4260f4f1295605ee06f960`。
+
+- 修改：`src/guide/功能详情/注入提示词.md`
+- 修改：`src/guide/功能详情/酒馆助手宏.md`
 
 ## sillytavern
 
@@ -62,7 +69,7 @@
 
 保留锁定版本，等待宿主兼容性审查。
 
-[上游差异](https://github.com/StageDog/tavern_resource/compare/cc37b3b472ca5f7e7f7c7779298b59e2c078003b...da9d095831480ddd7e49cfd43c0d4941dc0e2f79)：`cc37b3b472ca5f7e7f7c7779298b59e2c078003b` → `da9d095831480ddd7e49cfd43c0d4941dc0e2f79`。
+[上游差异](https://github.com/StageDog/tavern_resource/compare/cc37b3b472ca5f7e7f7c7779298b59e2c078003b...29becf3f62736242db05fe4aa0bf5c77e7bd6653)：`cc37b3b472ca5f7e7f7c7779298b59e2c078003b` → `29becf3f62736242db05fe4aa0bf5c77e7bd6653`。
 
 - 修改：`package.json`
 
@@ -70,5 +77,9 @@
 
 策略：`follow-upstream`；跟踪：`main`。
 
-所选资料文件无变化。锁定提交：`96c4eac86b68f372940e9dea98e1e33a8649a501`。
+已更新资料锁，待人工审查合并。
+
+[上游差异](https://github.com/StageDog/tavern_sync/compare/96c4eac86b68f372940e9dea98e1e33a8649a501...c4fd645c83d2e71e3ac561345e46f629476c2c4d)：`96c4eac86b68f372940e9dea98e1e33a8649a501` → `c4fd645c83d2e71e3ac561345e46f629476c2c4d`。
+
+- 修改：`package.json`
 

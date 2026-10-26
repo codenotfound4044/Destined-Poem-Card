@@ -1075,8 +1075,8 @@
     "tavern-sync": {
       "repository": "StageDog/tavern_sync",
       "ref": "main",
-      "commit": "96c4eac86b68f372940e9dea98e1e33a8649a501",
-      "fetchedAt": "2026-10-23T12:29:48.901Z",
+      "commit": "c4fd645c83d2e71e3ac561345e46f629476c2c4d",
+      "fetchedAt": "2026-10-26T07:57:34.320Z",
       "license": {
         "spdx": "NOASSERTION",
         "source": "LICENSE"
@@ -1185,7 +1185,7 @@
           "bytes": 9870
         },
         "package.json": {
-          "sha256": "f5d8d34554210f9596fc090b474a367dc7441ecbc34f5ed51f3a69186ee8192e",
+          "sha256": "365d9a5259af0b3cce6a22aaad8790dc8186220c1a9500aad4da35b41fe0c076",
           "local": "references/upstream/tavern-sync/package.json",
           "bytes": 1396
         },

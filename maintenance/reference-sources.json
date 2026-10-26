@@ -60,9 +60,15 @@
         "src/guide/基本用法/渲染器.md",
         "src/guide/基本用法/脚本库.md"
       ],
-      "include": ["re:\\.md$", "re:(^|/)LICENSE$"],
+      "include": [
+        "re:\\.md$",
+        "re:(^|/)LICENSE$"
+      ],
       "exclude": [],
-      "required": ["README.md", "src/guide/功能详情/请求生成.md"],
+      "required": [
+        "README.md",
+        "src/guide/功能详情/请求生成.md"
+      ],
       "maxFiles": 120,
       "pinCommit": "08c81a21147498ce0de6f18cbfffc28a364ca27c",
       "updatePolicy": {
@@ -130,7 +136,10 @@
         "LICENSE",
         "readme.md"
       ],
-      "include": ["re:\\.md$", "re:(^|/)LICENSE$"],
+      "include": [
+        "re:\\.md$",
+        "re:(^|/)LICENSE$"
+      ],
       "exclude": [],
       "required": [
         "LICENSE",
@@ -218,8 +227,14 @@
         "src/function/request/worldinfo_scan.ts",
         "src/function/request/worldinfo_request.ts"
       ],
-      "include": ["re:\\.(md|txt|ts|js|json|yaml|yml)$", "re:(^|/)LICENSE$"],
-      "exclude": ["/artifact/", "re:\\.map$"],
+      "include": [
+        "re:\\.(md|txt|ts|js|json|yaml|yml)$",
+        "re:(^|/)LICENSE$"
+      ],
+      "exclude": [
+        "/artifact/",
+        "re:\\.map$"
+      ],
       "required": [
         "LICENSE",
         "doc/tutorial.md",
@@ -252,7 +267,9 @@
       ],
       "include": [],
       "exclude": [],
-      "required": ["README.md"],
+      "required": [
+        "README.md"
+      ],
       "maxFiles": 20,
       "pinCommit": "8083fb388615ccbce768e97cbbd49d2b3214632c",
       "updatePolicy": {
@@ -276,7 +293,10 @@
       ],
       "include": [],
       "exclude": [],
-      "required": ["SPEC_V3.md", "LICENSE"],
+      "required": [
+        "SPEC_V3.md",
+        "LICENSE"
+      ],
       "maxFiles": 20,
       "pinCommit": "f3a86af019fbd99f788f7a1155f399655b34ab35",
       "updatePolicy": {
@@ -300,7 +320,10 @@
       ],
       "include": [],
       "exclude": [],
-      "required": ["util/mvu_zod.ts", "dist/util/mvu_zod.js"],
+      "required": [
+        "util/mvu_zod.ts",
+        "dist/util/mvu_zod.js"
+      ],
       "maxFiles": 10,
       "license": null,
       "updatePolicy": {
@@ -312,7 +335,7 @@
       "id": "tavern-sync",
       "repository": "StageDog/tavern_sync",
       "ref": "main",
-      "pinCommit": "96c4eac86b68f372940e9dea98e1e33a8649a501",
+      "pinCommit": "c4fd645c83d2e71e3ac561345e46f629476c2c4d",
       "dest": "tavern-sync",
       "note": "tavern_sync schema/type; only read as reference.",
       "files": [
