@@ -1,4 +1,5 @@
 import { dataUrl } from '@/shared/cdn';
+import { fetchWithRetry } from '@/shared/fetch-retry';
 
 export interface AgreementSection {
   title: string;
@@ -46,7 +47,7 @@ function isAgreementDocument(value: unknown): value is AgreementDocument {
 
 /** 从当前发布资源读取用户协议；保留按协议版本确认和无缓存请求的行为。 */
 export async function loadAgreement(): Promise<AgreementDocument> {
-  const response = await fetch(`${AGREEMENT_URL}?t=${Date.now()}`, { cache: 'no-store' });
+  const response = await fetchWithRetry(`${AGREEMENT_URL}?t=${Date.now()}`, { cache: 'no-store' });
   if (!response.ok) {
     throw new Error(`协议加载失败 (${response.status})`);
   }

@@ -151,10 +151,11 @@ export const useCharacterStore = defineStore('character', () => {
     return newPoints;
   };
 
-  /** 切换开发者模式；开启时直接给高点数，关闭时在未消耗点数的情况下重新 Roll */
+  /** 切换开发者模式；开启时直接给高点数，关闭时在可以 Roll（除天赋外未消耗点数）时重新 Roll */
   const toggleDevMode = () => {
     devMode.value = !devMode.value;
-    if (devMode.value || consumedPoints.value === 0) {
+    const talentCost = selectedTalent.value?.cost ?? 0;
+    if (devMode.value || consumedPoints.value - talentCost === 0) {
       rollInitialPoints();
     }
     return devMode.value;

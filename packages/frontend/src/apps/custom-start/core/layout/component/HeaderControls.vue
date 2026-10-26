@@ -12,16 +12,18 @@ const characterStore = useCharacterStore();
 const { character } = storeToRefs(characterStore);
 const { availablePoints, canRollPoints, rollPoints } = usePoints();
 
-// 开发组入口：1.5 秒内连点「可用转生点」10 次切换开发者模式
+// 开发组入口：连点「可用转生点」10 次切换开发者模式，两次点击间隔超过 0.8 秒重新计数
 const DEV_TAP_COUNT = 10;
-const DEV_TAP_WINDOW_MS = 1500;
-let devTaps: number[] = [];
+const DEV_TAP_GAP_MS = 800;
+let devTapCount = 0;
+let lastDevTapAt = 0;
 
 const handlePointsLabelTap = () => {
   const now = Date.now();
-  devTaps = [...devTaps.filter(time => now - time < DEV_TAP_WINDOW_MS), now];
-  if (devTaps.length < DEV_TAP_COUNT) return;
-  devTaps = [];
+  devTapCount = now - lastDevTapAt <= DEV_TAP_GAP_MS ? devTapCount + 1 : 1;
+  lastDevTapAt = now;
+  if (devTapCount < DEV_TAP_COUNT) return;
+  devTapCount = 0;
   const enabled = characterStore.toggleDevMode();
   toastr.info(enabled ? '开发者模式已开启' : '开发者模式已关闭');
 };
@@ -44,7 +46,11 @@ const emit = defineEmits<{
       <button
         class="control-button roll-button"
         :disabled="!canRollPoints"
-        :title="canRollPoints ? '随机生成新的转生点数' : '已消耗点数，无法重新 Roll（请先重置）'"
+        :title="
+          canRollPoints
+            ? '随机生成新的转生点数'
+            : '已消耗点数（天赋除外），无法重新 Roll（请先重置）'
+        "
         @click="rollPoints"
       >
         <i class="fa-solid fa-dice"></i>

@@ -1,9 +1,10 @@
 import JSON5 from 'json5';
 import { dataUrl } from './cdn';
+import { fetchWithRetry } from './fetch-retry';
 
 /** Required catalog data must fail visibly instead of becoming an empty success. */
 export async function loadJson5<T>(url: string): Promise<T> {
-  const response = await fetch(url);
+  const response = await fetchWithRetry(url);
   if (!response.ok) throw new Error(`数据加载失败 (${response.status}): ${url}`);
   try {
     return JSON5.parse(await response.text()) as T;
