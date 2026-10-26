@@ -2,6 +2,8 @@
 
 `[本体][变量]mvu变量修改日志` 是默认启用的 EJS 蓝灯条目，位于 `worldbook/命定之诗/变量/mvu变量修改日志.ejs`，需要 ST-Prompt-Template。它在提示词构建时只读消息楼层的 `stat_data`，比较当前有效状态与上一轮更新前状态，直接输出简略净变化；无需更新 FrontEnd 或 Automated-script，也不写入 chat/message 日志缓存。
 
+`[本体][变量]variables` 当前变量展示也依赖已启用的「公共函数」条目，以及 ST-Prompt-Template 设置中的「启用 generate before/after 注入支持」。缺少 `destinyVisibleState` 时，展示条目会输出配置提示，不读取或展示未过滤的变量；请按提示启用条目和注入支持。
+
 条目在 `worldbook/命定之诗.yaml` 中按指定深度 1、系统角色、顺序 99998 插入，位于 `[本体][变量]variables`（99996）和事件信号适配（99997）之后，不与后者占用同一顺序。
 
 输出标签为 `<mvu变量上一轮次修改日志>`，说明文案为“上轮净变化已生效，勿重复执行；此处仅记录变动信息。”
@@ -17,7 +19,7 @@
 
 ## 其他条目复用时间解析
 
-`worldbook/命定之诗/变量/公共函数.ejs` 集中注册 `destinyParseTime(value)` 和展示与日志共用的 `destinyVisibleState(value)`，后续公共函数也放在此处。蓝灯条目名称是 `[本体][变量]公共函数`，正文首行的 `@@generate_before` 让它在生成前执行；只注册函数，不输出提示词，也不读写游戏变量。使用日志或下列调用的条目时，需保持这个公共条目和 ST-Prompt-Template 的内容注入功能启用。
+`worldbook/命定之诗/变量/公共函数.ejs` 集中注册 `destinyParseTime(value)` 和展示与日志共用的 `destinyVisibleState(value)`，后续公共函数也放在此处。蓝灯条目名称是 `[本体][变量]公共函数`，正文首行的 `@@generate_before` 让它在生成前执行，紧随其后的 `@@always_enabled` 保证 ST-Prompt-Template 的“反转特殊条目启用状态”设置不会把这个依赖条目排除；只注册函数，不输出提示词，也不读写游戏变量。使用日志或下列调用的条目时，需保持这个公共条目和 ST-Prompt-Template 的内容注入功能启用。该条目由公共依赖声明控制，不能再依赖世界书普通启用开关。
 
 ```ejs
 <%_ {

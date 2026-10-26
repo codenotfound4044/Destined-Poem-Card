@@ -1,5 +1,7 @@
 <status_current_variables>
-<%_ {
+<%_ if (typeof destinyVisibleState !== 'function') { _%>
+【变量展示配置提示】请启用世界书的「[本体][变量]公共函数」条目，并在 ST-Prompt-Template 设置中勾选「启用 generate before/after 注入支持」。
+<%_ } else {
   const data = getMessageVar('stat_data', { defaults: {} });
   const cleanData = destinyVisibleState(data);
 _%>

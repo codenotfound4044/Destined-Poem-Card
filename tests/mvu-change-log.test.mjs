@@ -26,6 +26,16 @@ const render = async (states, messages, generateType = 'normal') => {
 };
 const alternating = count => Array.from({ length: count }, (_, id) => ({ is_user: id % 2 === 0 }));
 
+test('variable display explains missing shared function configuration without reading raw state', async () => {
+  const output = await ejs.render(displaySource, {
+    YAML,
+    getMessageVar() { throw new Error('must not read unfiltered state'); },
+  }, { async: true });
+  assert.match(output, /公共函数/);
+  assert.match(output, /启用 generate before\/after 注入支持/);
+});
+
+
 test('log and display omit internal events, hidden objects, absent private fields and locked ascension without mutating snapshots', async () => {
   const before = state();
   before.事件 = { 信号: ['secret-before'] };
