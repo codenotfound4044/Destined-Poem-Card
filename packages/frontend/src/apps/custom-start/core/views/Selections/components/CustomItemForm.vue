@@ -9,7 +9,7 @@ import {
   FormNumber,
   FormTextarea,
 } from '../../../components/Form';
-import { useCustomContentStore } from '../../../store/customContent';
+import { hasCustomItemFormContent, useCustomContentStore } from '../../../store/customContent';
 import type { Asset, CustomInternalAsset, Equipment, Item, Rarity, Skill } from '../../../types';
 import {
   calculateAssetCostByPosition,
@@ -33,8 +33,11 @@ const emit = defineEmits<Emits>();
 // 使用自定义内容 store
 const customContentStore = useCustomContentStore();
 
-// 折叠状态
-const isExpanded = ref(false);
+// 折叠状态：草稿恢复出未提交的内容时默认展开
+const isExpanded = ref(
+  customContentStore.editingCustomItemName.trim() !== '' ||
+    hasCustomItemFormContent(customContentStore.customItemForm),
+);
 
 // 确认弹窗状态
 const showResetConfirm = ref(false);
@@ -129,6 +132,8 @@ const addInternalAsset = () => {
 };
 
 const removeInternalAsset = (index: number) => {
+  // 内部资产按序号复用输入组件，删除后清掉未提交的标签/效果输入，避免串到下一项
+  customContentStore.resetEditorDrafts('item.internal.');
   internalAssets.value = internalAssets.value.filter((_, i) => i !== index);
 };
 
@@ -188,6 +193,8 @@ const fillFormByItem = (
   item: Asset | Equipment | Item | Skill,
   type: 'equipment' | 'item' | 'asset' | 'skill',
 ) => {
+  // 回填另一件物品前，清掉编辑器里上一件的未提交输入
+  customContentStore.resetEditorDrafts('item.');
   const isAsset = '内部资产' in item;
   const asset = isAsset ? item : null;
   const ordinaryItem = !isAsset ? item : null;
@@ -390,6 +397,7 @@ const confirmAdd = () => {
         <FormLabel label="标签" />
         <FormArrayInput
           v-model="itemTag"
+          draft-key="item.tag"
           placeholder="输入标签后按回车添加或保存"
           add-button-text="添加标签"
           empty-text="暂无标签，点击下方按钮添加"
@@ -461,6 +469,7 @@ const confirmAdd = () => {
               <FormLabel label="标签" />
               <FormArrayInput
                 v-model="internal.标签"
+                :draft-key="`item.internal.${index}.tag`"
                 placeholder="例如：类型:住宅、位置:1层、状态:可用"
                 add-button-text="添加标签"
                 empty-text="暂无内部资产标签"
@@ -476,6 +485,7 @@ const confirmAdd = () => {
               <FormLabel label="效果" />
               <FormKeyValueInput
                 v-model="internal.效果"
+                :draft-key="`item.internal.${index}.effect`"
                 placeholder-key="效果名"
                 placeholder-value="效果内容"
                 add-button-text="添加效果"
@@ -509,6 +519,7 @@ const confirmAdd = () => {
         <FormLabel label="效果" required />
         <FormKeyValueInput
           v-model="itemEffect"
+          draft-key="item.effect"
           placeholder-key="效果名"
           placeholder-value="效果内容"
           add-button-text="添加效果"

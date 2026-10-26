@@ -3,6 +3,7 @@
  * 动态数组输入组件
  */
 import { computed, ref } from 'vue';
+import { useDraftSlot } from '../../composables/use-draft-slot';
 
 interface Props {
   modelValue: string[];
@@ -12,6 +13,8 @@ interface Props {
   disabled?: boolean;
   addButtonText?: string;
   emptyText?: string;
+  /** 传入时，未提交的输入随开局草稿保存（见 useDraftSlot） */
+  draftKey?: string;
 }
 
 interface Emits {
@@ -25,12 +28,13 @@ const props = withDefaults(defineProps<Props>(), {
   disabled: false,
   addButtonText: '添加项目',
   emptyText: '暂无项目，点击下方按钮添加',
+  draftKey: '',
 });
 
 const emit = defineEmits<Emits>();
 
 // 新增项的输入值
-const newItemValue = ref('');
+const newItemValue = useDraftSlot(props.draftKey || undefined, () => '');
 
 // 当前编辑项的索引
 const editingIndex = ref<number | null>(null);

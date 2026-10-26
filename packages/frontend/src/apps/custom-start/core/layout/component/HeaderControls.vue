@@ -12,6 +12,20 @@ const characterStore = useCharacterStore();
 const { character } = storeToRefs(characterStore);
 const { availablePoints, canRollPoints, rollPoints } = usePoints();
 
+// 开发组入口：1.5 秒内连点「可用转生点」10 次切换开发者模式
+const DEV_TAP_COUNT = 10;
+const DEV_TAP_WINDOW_MS = 1500;
+let devTaps: number[] = [];
+
+const handlePointsLabelTap = () => {
+  const now = Date.now();
+  devTaps = [...devTaps.filter(time => now - time < DEV_TAP_WINDOW_MS), now];
+  if (devTaps.length < DEV_TAP_COUNT) return;
+  devTaps = [];
+  const enabled = characterStore.toggleDevMode();
+  toastr.info(enabled ? '开发者模式已开启' : '开发者模式已关闭');
+};
+
 const emit = defineEmits<{
   openPreset: [];
 }>();
@@ -20,7 +34,7 @@ const emit = defineEmits<{
 <template>
   <div class="header-controls">
     <div class="points-display">
-      <span class="points-label">可用转生点：</span>
+      <span class="points-label" @click="handlePointsLabelTap">可用转生点：</span>
       <span class="points-value" :class="{ negative: availablePoints < 0 }">
         {{ availablePoints }}
       </span>
@@ -63,6 +77,9 @@ const emit = defineEmits<{
 
   .points-label {
     color: var(--text-color);
+    // 连点时不选中文字，也不显示可点击的样式
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
   }
 
   .points-value {

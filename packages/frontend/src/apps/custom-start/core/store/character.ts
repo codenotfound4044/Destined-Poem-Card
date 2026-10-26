@@ -23,6 +23,7 @@ import type {
   Partner,
   Skill,
 } from '../types';
+import { readPersonaName } from '../utils/player-name';
 
 // 获取默认身份（模糊匹配含有"平民"的第一个值）
 const getDefaultIdentity = () =>
@@ -30,8 +31,9 @@ const getDefaultIdentity = () =>
 
 export const useCharacterStore = defineStore('character', () => {
   // State
+  // 姓名只读酒馆人设名，不由玩家输入
   const character = ref<Omit<CharacterConfig, 'attributes'>>({
-    name: '',
+    name: readPersonaName(),
     gender: '男',
     customGender: '',
     age: 18,
@@ -140,15 +142,32 @@ export const useCharacterStore = defineStore('character', () => {
     }
   };
 
+  /** 开发者模式：只在本次页面有效，玩家界面不显示入口 */
+  const devMode = ref(false);
+
   const rollInitialPoints = () => {
-    const newPoints = generateInitialPoints(character.value.name);
+    const newPoints = generateInitialPoints(devMode.value);
     character.value.reincarnationPoints = newPoints;
     return newPoints;
   };
 
+  /** 切换开发者模式；开启时直接给高点数，关闭时在未消耗点数的情况下重新 Roll */
+  const toggleDevMode = () => {
+    devMode.value = !devMode.value;
+    if (devMode.value || consumedPoints.value === 0) {
+      rollInitialPoints();
+    }
+    return devMode.value;
+  };
+
+  /** 重新读取酒馆人设名（玩家可能在页面打开后切换了人设） */
+  const syncPlayerName = () => {
+    character.value.name = readPersonaName();
+  };
+
   const resetCharacter = () => {
     character.value = {
-      name: '',
+      name: readPersonaName(),
       gender: '男',
       customGender: '',
       age: 18,
@@ -396,6 +415,9 @@ export const useCharacterStore = defineStore('character', () => {
     addAttributePoint,
     removeAttributePoint,
     rollInitialPoints,
+    devMode,
+    toggleDevMode,
+    syncPlayerName,
     resetCharacter,
     addEquipment,
     removeEquipment,

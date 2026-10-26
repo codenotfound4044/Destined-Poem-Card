@@ -3,6 +3,7 @@
  * 键值对输入组件（用于效果等结构化字段）
  */
 import { computed, ref, watch } from 'vue';
+import { useDraftSlot } from '../../composables/use-draft-slot';
 
 type KeyValueItem = {
   key: string;
@@ -18,6 +19,8 @@ interface Props {
   disabled?: boolean;
   addButtonText?: string;
   emptyText?: string;
+  /** 传入时，未提交的输入随开局草稿保存（见 useDraftSlot） */
+  draftKey?: string;
 }
 
 interface Emits {
@@ -32,15 +35,17 @@ const props = withDefaults(defineProps<Props>(), {
   disabled: false,
   addButtonText: '添加条目',
   emptyText: '暂无条目，点击下方按钮添加',
+  draftKey: '',
 });
 
 const emit = defineEmits<Emits>();
 
 const items = ref<KeyValueItem[]>([]);
-const newKey = ref('');
-const newValue = ref('');
-const editingIndex = ref<number | null>(null);
-const editingItem = ref<KeyValueItem | null>(null);
+const slotKey = (name: string) => (props.draftKey ? `${props.draftKey}.${name}` : undefined);
+const newKey = useDraftSlot(slotKey('newKey'), () => '');
+const newValue = useDraftSlot(slotKey('newValue'), () => '');
+const editingIndex = useDraftSlot<number | null>(slotKey('editingIndex'), () => null);
+const editingItem = useDraftSlot<KeyValueItem | null>(slotKey('editingItem'), () => null);
 
 const canAddMore = computed(() => !props.disabled && items.value.length < props.maxItems);
 const canRemove = computed(() => !props.disabled && items.value.length > props.minItems);

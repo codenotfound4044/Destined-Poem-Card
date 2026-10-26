@@ -1,4 +1,4 @@
-/** 优先使用开局填写的姓名，未填写时回退到酒馆当前玩家名称。 */
+/** 使用开局姓名（即酒馆人设名），为空时回退到酒馆当前玩家名称。 */
 export function resolvePlayerPlaceholders<T>(value: T, playerName = ''): T {
   const resolvedName =
     playerName.trim() || (typeof SillyTavern !== 'undefined' ? SillyTavern.name1 : '');

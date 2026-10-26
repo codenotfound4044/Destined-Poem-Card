@@ -234,9 +234,8 @@ export function createPresetFromStore(
   };
 }
 
-/** 角色配置字段列表，用于预设应用 */
+/** 角色配置字段列表，用于预设应用；姓名始终取酒馆人设名，不从预设读取 */
 const CharacterFields = [
-  'name',
   'gender',
   'customGender',
   'age',
@@ -329,6 +328,7 @@ export function applyPresetToStore(
     addPartner: (partner: Partner) => void;
     setBackground: (background: Background | null) => void;
   },
+  { silent = false }: { silent?: boolean } = {},
 ): void {
   // 1. 重置角色数据和所有选择（包括伙伴和背景）
   characterStore.resetCharacter();
@@ -359,7 +359,7 @@ export function applyPresetToStore(
   // 4. 应用背景
   characterStore.setBackground(preset.background);
 
-  toastr.success(`已加载预设「${preset.name}」`);
+  if (!silent) toastr.success(`已加载预设「${preset.name}」`);
 }
 
 /**
@@ -376,8 +376,8 @@ export function formatPresetTime(timestamp: number): string {
   });
 }
 
-/** 需要排除的动态字段 */
-const DynamicFields = ['createdAt', 'updatedAt'];
+/** 比较角色配置时排除的字段：姓名随人设变化，不算预设内容 */
+const IgnoredCharacterFields = ['name'];
 
 /**
  * 比较当前 store 数据与预设是否相同
@@ -399,9 +399,9 @@ export function isStoreMatchingPreset(
   },
   customInjectionSettings: CustomInjectionSettings = DEFAULT_CUSTOM_INJECTION_SETTINGS,
 ): boolean {
-  // 比较角色基本信息（排除时间戳等动态字段）
-  const charToCompare = _.omit(characterStore.character, DynamicFields);
-  const presetCharToCompare = _.omit(preset.character, DynamicFields);
+  // 比较角色基本信息（排除姓名）
+  const charToCompare = _.omit(characterStore.character, IgnoredCharacterFields);
+  const presetCharToCompare = _.omit(preset.character, IgnoredCharacterFields);
 
   // 使用 _.every 简化多个比较
   return _.every([

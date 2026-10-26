@@ -25,9 +25,12 @@ import {
   TALENT_LEVELS,
 } from '../../data/base-info';
 import { useCharacterStore } from '../../store';
+import { isDefaultPersonaName } from '../../utils/player-name';
 
 const characterStore = useCharacterStore();
 const { character } = storeToRefs(characterStore);
+
+const isDefaultName = computed(() => isDefaultPersonaName(character.value.name));
 const { addBasePoint, removeBasePoint, addAttributePoint, removeAttributePoint } = characterStore;
 
 // 从外部数据获取选项列表
@@ -72,11 +75,25 @@ const displayStartLocation = computed(() => {
 <template>
   <div class="basic-info">
     <div class="form-container">
+      <div class="persona-notice" :class="{ warning: isDefaultName }">
+        <template v-if="isDefaultName">
+          当前人设名是「{{
+            character.name || '空'
+          }}」，还没有设置。请先在酒馆「用户设定」里创建或切换人设，再填写开局。
+        </template>
+        <template v-else>
+          姓名使用酒馆当前人设「{{
+            character.name
+          }}」。要换名字，请先在酒馆「用户设定」里切换或修改人设。
+        </template>
+        切换人设可能让本页重新载入，已填写的内容会自动保存。
+      </div>
+
       <!-- 第一行：姓名和性别 -->
       <div class="form-row">
         <div class="form-field">
           <FormLabel label="姓名" required />
-          <FormInput v-model="character.name" placeholder="请输入角色姓名" />
+          <FormInput :model-value="character.name" readonly placeholder="未设置人设名" />
         </div>
         <div class="form-field">
           <FormLabel label="性别" required />
@@ -315,6 +332,24 @@ const displayStartLocation = computed(() => {
 </template>
 
 <style lang="scss" scoped>
+.persona-notice {
+  margin-bottom: var(--spacing-lg);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid var(--accent-color);
+  border-radius: var(--radius-md);
+  background: rgba(212, 175, 55, 0.1);
+  color: var(--text-color);
+  font-size: 0.9rem;
+  line-height: 1.6;
+
+  &.warning {
+    border-color: var(--error-color);
+    background: rgba(211, 47, 47, 0.1);
+    color: var(--error-color);
+    font-weight: 600;
+  }
+}
+
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;

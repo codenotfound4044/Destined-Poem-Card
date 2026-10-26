@@ -46,27 +46,18 @@ export const getStartLocationsCascader = computed(() => {
   return cascaderOptions;
 });
 
-/**
- * 检查是否启用开发者模式（通过姓名暗号）
- * 暗号：名字包含特定字符序列
- */
-const checkDevModeByName = (name: string): boolean => {
-  // 暗号
-  const devPatterns = ['[dev]', '[test]'];
-  const lowerName = name.toLowerCase();
-  return devPatterns.some(pattern => lowerName.includes(pattern));
-};
+/** 开发者模式的转生点数 */
+export const DEV_MODE_POINTS = 666666;
 
 /**
  * 生成随机初始转生点数
  * 范围: 1000-10000
  * 更好的加权随机
- * @param characterName 可选的角色名，用于检测开发者模式
+ * @param devMode 开发者模式（连点「可用转生点」10 次开启）直接返回高点数
  */
-export const generateInitialPoints = (characterName?: string): number => {
-  // 开发者模式：如果角色名包含特定暗号，返回高点数
-  if (characterName && checkDevModeByName(characterName)) {
-    return 666666;
+export const generateInitialPoints = (devMode = false): number => {
+  if (devMode) {
+    return DEV_MODE_POINTS;
   }
 
   const random = Math.random();

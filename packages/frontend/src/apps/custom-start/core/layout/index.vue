@@ -3,7 +3,7 @@ import { ref, computed } from 'vue';
 import { onMounted } from 'vue';
 
 import PresetModal from '../components/PresetModal.vue';
-import { useJourney, usePoints, usePresetModal, useStepNavigation } from '../composables';
+import { useDraft, useJourney, usePoints, usePresetModal, useStepNavigation } from '../composables';
 import { STEP_CONFIGS } from '../router/route-constants';
 import { useCharacterStore, useCustomContentStore } from '../store';
 import { findMatchingPreset } from '../utils/preset-manager';
@@ -40,11 +40,22 @@ const showSaveConfirm = ref(false);
 // 步骤标题（用于 Steps 组件）
 const stepTitles = STEP_CONFIGS.map(c => ({ title: c.shortTitle }));
 
-// 组件挂载时检查是否有预设
+const { restoreDraft, startAutoSave } = useDraft();
+
+// 在子页面创建前恢复草稿，表单初始化时就能读到恢复的内容
+const restored = restoreDraft();
+startAutoSave();
+
+// 没有草稿才弹出预设选择
 onMounted(() => {
-  setTimeout(() => {
-    checkAndShowLoadModal();
-  }, 300);
+  // 人设名改动后酒馆会保存设置，借此刷新姓名
+  eventOn(tavern_events.SETTINGS_UPDATED, () => characterStore.syncPlayerName());
+
+  if (!restored) {
+    setTimeout(() => {
+      checkAndShowLoadModal();
+    }, 300);
+  }
 });
 
 // 预设加载完成回调

@@ -10,7 +10,7 @@ import {
   FormRadio,
   FormTextarea,
 } from '../../../components/Form';
-import { useCustomContentStore } from '../../../store/customContent';
+import { hasCustomPartnerFormContent, useCustomContentStore } from '../../../store/customContent';
 import type { Partner, Rarity } from '../../../types';
 import { calculateDestinedCost } from '../../../utils/cost-calculator';
 import AttributeEditor from './AttributeEditor.vue';
@@ -24,7 +24,11 @@ interface Emits {
 
 const emit = defineEmits<Emits>();
 const customContentStore = useCustomContentStore();
-const isExpanded = ref(false);
+// 折叠状态：草稿恢复出未提交的内容时默认展开
+const isExpanded = ref(
+  customContentStore.editingCustomPartnerName.trim() !== '' ||
+    hasCustomPartnerFormContent(customContentStore.customPartnerForm),
+);
 
 // 编辑状态
 const editingPartnerName = computed(() => customContentStore.editingCustomPartnerName);
@@ -201,6 +205,8 @@ const resetForm = () => {
 
 // 回填表单
 const fillFormByPartner = (partner: Partner) => {
+  // 回填另一位伙伴前，清掉编辑器里上一位的未提交输入
+  customContentStore.resetEditorDrafts('partner.');
   const resolvedLevel = resolveLevelByLifeLevel(partner.lifeLevel || '');
   const grade = partner.level || LEVEL_GRADE_MAP[resolvedLevel].minGrade;
 
@@ -370,13 +376,21 @@ const confirmAdd = () => {
       <!-- 身份 -->
       <div class="form-row">
         <FormLabel label="身份" />
-        <FormArrayInput v-model="itemIdentity" placeholder="输入身份后按回车添加" />
+        <FormArrayInput
+          v-model="itemIdentity"
+          draft-key="partner.identity"
+          placeholder="输入身份后按回车添加"
+        />
       </div>
 
       <!-- 职业 -->
       <div class="form-row">
         <FormLabel label="职业" />
-        <FormArrayInput v-model="itemCareer" placeholder="输入职业后按回车添加" />
+        <FormArrayInput
+          v-model="itemCareer"
+          draft-key="partner.career"
+          placeholder="输入职业后按回车添加"
+        />
       </div>
 
       <!-- 性格 -->
@@ -412,13 +426,13 @@ const confirmAdd = () => {
       <!-- 装备 -->
       <div class="form-row">
         <FormLabel label="装备" />
-        <EquipmentEditor v-model="itemEquip" :max-items="10" />
+        <EquipmentEditor v-model="itemEquip" draft-key="partner.equipEditor" :max-items="10" />
       </div>
 
       <!-- 技能 -->
       <div class="form-row">
         <FormLabel label="技能" />
-        <SkillEditor v-model="itemSkills" :max-items="10" />
+        <SkillEditor v-model="itemSkills" draft-key="partner.skillEditor" :max-items="10" />
       </div>
 
       <!-- 登神长阶 -->

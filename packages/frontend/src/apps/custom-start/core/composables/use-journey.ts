@@ -6,6 +6,7 @@ import { storeToRefs } from 'pinia';
 
 import { useCharacterStore, useCustomContentStore } from '../store';
 import { generateAIPrompt, writeCharacterToMvu } from '../utils/data-exporter';
+import { finishDraft } from '../utils/draft';
 
 interface UseJourneyReturn {
   /** 执行踏上旅程 */
@@ -25,6 +26,8 @@ export function useJourney(): UseJourneyReturn {
       toastr.warning('请先选择天赋水平');
       return;
     }
+    // 提交时重新读一次人设名，防止页面打开后切换过人设
+    characterStore.syncPlayerName();
     try {
       const injectionSettings = customContentStore.customInjectionSettings;
       const deferredCustomContent = {
@@ -63,6 +66,9 @@ export function useJourney(): UseJourneyReturn {
       await createChatMessages([{ role: 'user', message: aiPrompt }]);
 
       console.log('✅ 角色信息已发送给 AI');
+
+      // 开局消息已写入聊天，草稿不再需要
+      finishDraft();
 
       // 4. 触发 AI 回复（仅生成文本时不触发）
       if (triggerAI) {

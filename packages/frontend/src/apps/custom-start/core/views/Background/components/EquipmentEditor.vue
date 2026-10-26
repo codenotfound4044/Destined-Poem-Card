@@ -2,7 +2,7 @@
 /**
  * 装备编辑器组件
  */
-import { computed, ref, watch } from 'vue';
+import { computed, watch } from 'vue';
 import {
   FormArrayInput,
   FormInput,
@@ -20,12 +20,15 @@ import {
 
 // 装备项目接口
 import type { EquipmentItem } from '../../../types/editors';
+import { useDraftSlot } from '../../../composables/use-draft-slot';
 export type { EquipmentItem } from '../../../types/editors';
 
 interface Props {
   modelValue: EquipmentItem[];
   maxItems?: number;
   disabled?: boolean;
+  /** 传入时，未提交的输入随开局草稿保存（见 useDraftSlot） */
+  draftKey?: string;
 }
 
 interface Emits {
@@ -35,7 +38,10 @@ interface Emits {
 const props = withDefaults(defineProps<Props>(), {
   maxItems: 10,
   disabled: false,
+  draftKey: '',
 });
+
+const slotKey = (name: string) => (props.draftKey ? `${props.draftKey}.${name}` : undefined);
 
 const emit = defineEmits<Emits>();
 
@@ -44,23 +50,23 @@ const rarityOptions = RARITY_OPTIONS.map(opt => ({ label: opt.label, value: opt.
 const typeOptions = EQUIPMENT_TYPE_OPTIONS.map(opt => ({ label: opt.label, value: opt.value }));
 
 // 当前编辑的装备索引
-const editingIndex = ref<number | null>(null);
+const editingIndex = useDraftSlot<number | null>(slotKey('editingIndex'), () => null);
 
 // 新装备表单
-const newEquipment = ref<EquipmentItem>({
+const newEquipment = useDraftSlot<EquipmentItem>(slotKey('new'), () => ({
   name: '',
   type: EQUIPMENT_TYPE_OPTIONS[0].value,
   tag: [],
   rarity: 'common',
   effect: {},
   description: '',
-});
+}));
 
 // 编辑中的装备（临时存储）
-const editingEquipment = ref<EquipmentItem | null>(null);
+const editingEquipment = useDraftSlot<EquipmentItem | null>(slotKey('editing'), () => null);
 
 // 是否显示添加表单
-const showAddForm = ref(false);
+const showAddForm = useDraftSlot(slotKey('showAddForm'), () => false);
 
 // 计算属性：是否可以添加更多
 const canAddMore = computed(() => {
@@ -188,6 +194,7 @@ watch(
                 <FormLabel label="标签" />
                 <FormArrayInput
                   v-model="editingEquipment.tag"
+                  :draft-key="slotKey('edit.tag')"
                   placeholder="输入标签后按回车添加或保存"
                   add-button-text="添加标签"
                   empty-text="暂无标签"
@@ -197,6 +204,7 @@ watch(
                 <FormLabel label="效果" />
                 <FormKeyValueInput
                   v-model="editingEquipment.effect"
+                  :draft-key="slotKey('edit.effect')"
                   placeholder-key="效果名"
                   placeholder-value="效果内容"
                   add-button-text="添加效果"
@@ -317,6 +325,7 @@ watch(
         <FormLabel label="标签" />
         <FormArrayInput
           v-model="newEquipment.tag"
+          :draft-key="slotKey('new.tag')"
           placeholder="输入标签后按回车添加或保存"
           add-button-text="添加标签"
           empty-text="暂无标签"
@@ -326,6 +335,7 @@ watch(
         <FormLabel label="效果" />
         <FormKeyValueInput
           v-model="newEquipment.effect"
+          :draft-key="slotKey('new.effect')"
           placeholder-key="效果名"
           placeholder-value="效果内容"
           add-button-text="添加效果"
