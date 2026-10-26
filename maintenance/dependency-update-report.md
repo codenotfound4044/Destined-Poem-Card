@@ -12,11 +12,11 @@
 
 ## mvu-zod
 
-`v0.3.459` → `v0.3.459`；当前已是最新匹配正式 tag。
+`v0.3.459` → `v0.3.460`；有更新，待审查。
 
-[上游比较/历史](https://github.com/StageDog/tavern_resource/compare/v0.3.459...v0.3.459)；检查提交：`cc37b3b472ca5f7e7f7c7779298b59e2c078003b`。
+[上游比较/历史](https://github.com/StageDog/tavern_resource/compare/v0.3.459...v0.3.460)；检查提交：`29becf3f62736242db05fe4aa0bf5c77e7bd6653`。
 
-- `mvuZod`：[dist/util/mvu_zod.js](https://testingcf.jsdelivr.net/gh/StageDog/tavern_resource@v0.3.459/dist/util/mvu_zod.js)，4607 字节；SHA256：`e540ab99589ad83de1495056a84693bda00af92f8848926bcb9a53b9263a0302`。
+- `mvuZod`：[dist/util/mvu_zod.js](https://testingcf.jsdelivr.net/gh/StageDog/tavern_resource@v0.3.460/dist/util/mvu_zod.js)，4607 字节；SHA256：`e540ab99589ad83de1495056a84693bda00af92f8848926bcb9a53b9263a0302`。
 
 ## creative-workshop
 
@@ -34,3 +34,4 @@
 [上游比较/历史](https://github.com/uikawinwing/CharInfo-Manager/compare/v0.3.7...v0.3.7)；检查提交：`17bbb5df8b5823d4767cda27907fa2d92f2d33f5`。
 
 - `characterManager`：[dist/char_info_viewer_runtime/index.js](https://testingcf.jsdelivr.net/gh/uikawinwing/CharInfo-Manager@v0.3.7/dist/char_info_viewer_runtime/index.js)，1201677 字节；SHA256：`e1136d1acca383c8840e03afeb4aad4ad93a6eaff298775678af85088cc3fb7c`。
+
