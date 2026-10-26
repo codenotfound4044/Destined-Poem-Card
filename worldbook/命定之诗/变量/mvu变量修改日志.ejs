@@ -49,12 +49,12 @@
     const value = currentVisible.世界?.时间;
     const parsed = destinyParseTime(value);
     if (parsed.error) {
-      timeLines.push(`时间解析失败：${parsed.error}；当前值：${JSON.stringify(value) ?? '缺失'}。`);
-      timeLines.push('请在下一轮MVU更新中修正 /世界/时间，使用24小时制；依据已确认剧情，不得猜测日期或为修正格式额外推进时间。');
+      timeLines.push(`/世界/时间 无效：${JSON.stringify(value) ?? '缺失'}；${parsed.error}。`);
+      timeLines.push('下次 MVU 更新须修正 /世界/时间：依据已确认剧情恢复合法时间；仅修正表示，不额外推进时间，不臆造日期。');
     } else if (previous) {
       const oldValue = previousVisible.世界?.时间;
       const oldParsed = destinyParseTime(oldValue);
-      if (oldParsed.error) timeLines.push(`时间：当前值解析成功；比较基线解析失败（${oldParsed.error}），未计算时间差。`);
+      if (oldParsed.error) timeLines.push(`时间差不可计算：旧快照时间无效（${oldParsed.error}）；当前时间有效，无须为此改写。`);
       else if (oldParsed.era !== parsed.era) timeLines.push(`时间：${JSON.stringify(oldValue)} → ${JSON.stringify(value)}。`);
       else {
         const delta = parsed.minutes - oldParsed.minutes;

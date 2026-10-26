@@ -1,27 +1,39 @@
 @@generate_before
 @@always_enabled
 <%_ {
-  // 纯时间解析：不读写变量；UTC 只用于日历计算，不改变纪元或游戏时间。
+  // 公共函数索引：
+  // destinyParseTime：校验世界时间，返回纪元与 UTC 分钟数，或错误原因。
+  // destinyVisibleState：生成展示与日志共用的可见变量副本。
+
+  // destinyParseTime(value)
+  // 输入：世界时间字符串，如「复兴纪元488年-3月-15日-星期一-14:00」。
+  // 输出：成功 { era: string, minutes: number }；失败 { error: string }。
+  // 仅同纪元可计算时间差；使用延伸公历，不核验星期；不读写变量或推断时间。
   define('destinyParseTime', function (value) {
-    if (typeof value !== 'string' || !value.trim()) return { error: '时间为空或不是字符串' };
+    if (typeof value !== 'string' || !value.trim()) return { error: '须为非空时间字符串' };
     const match = value.match(/^([^\s\d-]+纪元)(\d+)年-(\d{1,2})月-(\d{1,2})日-星期[一二三四五六日天]-(\d{2}):(\d{2})$/);
-    if (!match) return { error: '格式必须符合变量更新规则：某某纪元488年-3月-15日-星期一-14:00；星期必填，时分均为两位数字，不接受季节、命名月份或时段前缀' };
+    if (!match) return { error: '格式应为「纪元名纪元Y年-M月-D日-星期X-HH:mm」；Y/M/D为数字，X为一至六、日或天，HH:mm为两位24小时制。如：复兴纪元488年-3月-15日-星期一-14:00' };
     const [, era, yearText, monthText, dayText, hourText, minuteText] = match;
     const year = Number(yearText), month = Number(monthText), day = Number(dayText);
     const hour = Number(hourText), minute = Number(minuteText);
-    if (!Number.isSafeInteger(year) || year < 1) return { error: '年份必须是正整数' };
-    if (month < 1 || month > 12) return { error: `月份${month}非法，应为1–12` };
-    if (hour > 23 || minute > 59) return { error: `时分${hourText}:${minuteText}非法；小时应为0–23，分钟应为0–59` };
+    if (!Number.isSafeInteger(year) || year < 1) return { error: '年份须为可精确表示的正整数' };
+    if (month < 1 || month > 12) return { error: `月份${month}越界；有效范围1至12` };
+    if (hour > 23 || minute > 59) return { error: `时分${hourText}:${minuteText}越界；小时0至23，分钟0至59` };
     const leap = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
     const days = month === 2 ? (leap ? 29 : 28) : [4, 6, 9, 11].includes(month) ? 30 : 31;
-    if (day < 1 || day > days) return { error: `${year}年${month}月的日期${day}非法，应为1–${days}` };
+    if (day < 1 || day > days) return { error: `${year}年${month}月日期${day}越界；本月有效日期1至${days}` };
     // setUTCFullYear 避免 Date.UTC 把1–99年自动解释为1901–1999年。
     const date = new Date(0);
     date.setUTCFullYear(year, month - 1, day);
     date.setUTCHours(hour, minute, 0, 0);
-    if (!Number.isFinite(date.getTime())) return { error: '日期超出可计算范围' };
+    if (!Number.isFinite(date.getTime())) return { error: '日期超出运行时可计算范围，无法换算分钟数' };
     return { era, minutes: date.getTime() / 60000 };
   });
+
+  // destinyVisibleState(value)
+  // 输入：完整 stat_data 对象；输出：经过可见性过滤的深拷贝，不修改输入。
+  // 移除事件、隐藏对象及控制标记；按在场/契约、等级与解锁条件裁剪伙伴及登神字段。
+  // 主角生命层级、等级、升级所需经验改为 _ 前缀字段；展示与日志使用相同口径。
   define('destinyVisibleState', function (value) {
     // 获取完整数据并移除事件（事件数据仅用于内部处理，不输出）
     const cleanData = _.omit(_.cloneDeep(value), '事件');
