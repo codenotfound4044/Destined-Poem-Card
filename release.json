@@ -8,7 +8,7 @@
   "assets": {
     "version": "1.0.3",
     "tagPrefix": "assets-v",
-    "published": false,
+    "published": true,
     "roots": [
       "https://cdn.poem-of-destiny.com/assets/{version}"
     ],
